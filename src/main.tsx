@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DiaryPage from '../components/DiaryPage';
+import SentenceWritingPage from '../components/SentenceWritingPage';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <DiaryPage />
+    <SentenceWritingPage />
   </React.StrictMode>,
 );
