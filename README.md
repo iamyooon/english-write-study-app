@@ -8,6 +8,25 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/english-write-study-app)
 
+## 환경 변수 설정
+
+OpenAI API를 사용하기 위해 API 키가 필요합니다.
+
+1. `.env` 파일을 프로젝트 루트에 생성
+2. OpenAI API 키 설정:
+
+```env
+VITE_OPENAI_API_KEY=your-openai-api-key-here
+```
+
+**API 키 발급 방법:**
+1. https://platform.openai.com/api-keys 방문
+2. 계정 생성 또는 로그인
+3. "Create new secret key" 클릭
+4. 생성된 키를 `.env` 파일에 복사
+
+**주의:** `.env` 파일은 Git에 커밋되지 않습니다 (`.gitignore`에 포함됨)
+
 ## 개발 서버 실행
 
 ```bash
@@ -61,7 +80,7 @@ npm run test:e2e:ui
 ## 주요 기능
 
 - 영어 일기 작성
-- AI 문법 교정
+- OpenAI GPT를 사용한 AI 문법 교정
 - Diff 형식으로 수정된 부분 강조 표시
 
 ## 기술 스택
