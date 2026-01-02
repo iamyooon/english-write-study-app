@@ -25,11 +25,23 @@ const JIRA_EMAIL = process.env.JIRA_EMAIL;
 const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
 const ISSUE_KEY = process.env.DEFAULT_ISSUE_KEY || 'WEB-294';
 
-const userRequest = process.argv[2] || '';
-const aiResponse = process.argv.slice(3).join(' ') || '';
+let userRequest = process.argv[2] || '';
+let aiResponse = process.argv.slice(3).join(' ') || '';
+
+// 파일에서 읽기 지원
+if (userRequest.startsWith('@')) {
+  const filePath = userRequest.substring(1);
+  userRequest = readFileSync(join(process.cwd(), filePath), 'utf-8').trim();
+}
+
+if (aiResponse.startsWith('@')) {
+  const filePath = aiResponse.substring(1);
+  aiResponse = readFileSync(join(process.cwd(), filePath), 'utf-8').trim();
+}
 
 if (!userRequest || !aiResponse) {
   console.error('Usage: node scripts/log-to-jira.mjs "user request" "ai response"');
+  console.error('   or: node scripts/log-to-jira.mjs @request.txt @response.txt');
   process.exit(1);
 }
 
