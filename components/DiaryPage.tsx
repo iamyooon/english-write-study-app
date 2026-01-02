@@ -22,8 +22,17 @@ const DiaryPage: React.FC = () => {
       const result = await GrammarService.check(text);
       setCheckResult(result);
     } catch (err) {
-      setError('문법 검사 중 오류가 발생했습니다.');
-      console.error(err);
+      // 에러 메시지를 구체적으로 표시
+      let errorMessage = '문법 검사 중 오류가 발생했습니다.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
+      console.error('Grammar check error:', err);
     } finally {
       setIsLoading(false);
     }

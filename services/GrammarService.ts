@@ -44,15 +44,30 @@ export class GrammarService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error?.message || 
-          `OpenAI API 오류: ${response.status} ${response.statusText}`
-        );
+        let errorMessage = `OpenAI API 오류: ${response.status} ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          } else if (errorData.error) {
+            errorMessage = JSON.stringify(errorData.error);
+          }
+        } catch (parseError) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      const corrected = data.choices[0]?.message?.content?.trim() || text;
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('OpenAI API 응답 형식이 올바르지 않습니다.');
+      }
+      
+      const corrected = data.choices[0].message.content?.trim() || text;
 
       return {
         original: text,
@@ -60,7 +75,19 @@ export class GrammarService {
       };
     } catch (error) {
       console.error('Grammar check error:', error);
-      throw error;
+      
+      // 네트워크 오류 처리
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+      }
+      
+      // 이미 Error 객체인 경우 그대로 전달
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      // 기타 오류
+      throw new Error(`예상치 못한 오류가 발생했습니다: ${String(error)}`);
     }
   }
 }
