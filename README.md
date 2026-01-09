@@ -27,6 +27,8 @@ VITE_OPENAI_API_KEY=your-openai-api-key-here
 
 **주의:** `.env` 파일은 Git에 커밋되지 않습니다 (`.gitignore`에 포함됨)
 
+**보안 가이드**: 자세한 보안 설정 및 API 키 관리 방법은 [SECURITY.md](./SECURITY.md)를 참고하세요.
+
 ## 개발 서버 실행
 
 ```bash
