@@ -29,6 +29,8 @@ VITE_OPENAI_API_KEY=your-openai-api-key-here
 
 **보안 가이드**: 자세한 보안 설정 및 API 키 관리 방법은 [SECURITY.md](./SECURITY.md)를 참고하세요.
 
+**환경 변수 설정 가이드**: Vercel 환경 변수와 로컬 환경 변수 설정 방법은 [ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)를 참고하세요.
+
 ## 개발 서버 실행
 
 ```bash
