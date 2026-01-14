@@ -46,3 +46,12 @@ Thumbs.db
 test-output.txt
 test-result.txt
 test-error.txt
+
+# Next.js build output
+.next/
+out/
+
+# Temp files
+temp-*.txt
+test-log.txt
+commit-message.txt

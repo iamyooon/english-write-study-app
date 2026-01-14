@@ -1,0 +1,143 @@
+🏗️ ESL Writing App 시스템 설계서 (v2.0 - Production Ready)
+버전: 2.0 (Grok 리뷰 반영)
+
+목표: 1인/소규모 팀이 가장 빠르고 안전하게 런칭 가능한 아키텍처 수립
+
+1. 시스템 아키텍처 (Tech Stack)
+초기 비용 절감과 개발 속도를 위해 Serverless & PWA로 시작하되, 결제와 알림은 전문 솔루션을 사용하여 리스크를 제거합니다.
+
+Frontend (Web & Mobile): Next.js 14+ (App Router)
+PWA: next-pwa 적용 (홈 화면 추가, 오프라인 지원).
+Mobile Roadmap: MVP 검증 후 3개월 내 Capacitor를 통해 네이티브 앱(Android/iOS)으로 패키징.
+Backend: Next.js API Routes (Serverless Functions).
+Database & Auth: Supabase
+DB: PostgreSQL (JSONB 활용).
+Security: RLS(Row Level Security) 필수 적용.
+Realtime: 부모님 기기로 실시간 알림 전송.
+AI Engine: OpenAI API (GPT-4o)
+Safety: OpenAI Moderation Endpoint 필수 경유.
+Infrastructure: Vercel (Pro Plan 권장 - 상용화 시).
+Payments (신규 추가): RevenueCat
+이유: 인앱 결제(IAP) 영수증 검증 로직 구현의 복잡성과 유지보수 비용 제거.
+Notifications (신규 추가): FCM (Firebase Cloud Messaging)
+이유: 단순 DB 로그가 아닌, 실제 부모님 폰을 울리는 푸시 알림 구현.
+
+2. 데이터베이스 스키마 설계 (PostgreSQL + RLS)
+Grok의 피드백대로 **보안 정책(RLS)**을 기본으로 깔고, 아이템 관리를 정규화했습니다.
+
+A. profiles (사용자 정보 + 재화)
+보안: 본인 데이터만 조회 가능 (RLS).
+컬럼: grade, publisher, energy, gems, is_premium, vision_usage_today.
+
+B. missions (커리큘럼)
+구조: 교과서 메타데이터는 jsonb로 유연하게 저장하되, 검색 성능을 위해 인덱싱 적용.
+
+C. study_logs (학습 기록 & Queue)
+UGC 제한: 초기에는 is_public 컬럼을 false로 고정하여 '나만의 도서관' 기능만 제공. (공개 갤러리 리스크 차단).
+Queue 상태: status ('completed', 'queued')로 관리.
+
+D. shop_items & user_inventory (상점 & 인벤토리)
+분리: 확장성을 위해 아이템 정의 테이블과 유저 보유 테이블 분리.
+트랜잭션: 아이템 구매 시 (젬 차감 + 아이템 지급)은 DB 트랜잭션으로 처리.
+
+3. 핵심 비즈니스 로직 및 안전장치
+① 3중 안전 필터링 (Safety Pipeline)
+아동 앱의 필수 요소인 욕설 차단을 3단계로 수행합니다.
+
+Client: bad-words 라이브러리로 입력창에서 즉시 블락 ("나쁜 말은 안 돼요!").
+Server Middleware: OpenAI Moderation API 호출 (성적/폭력적 콘텐츠 감지).
+AI Coach: 페르소나 프롬프트에 "부적절한 내용이 감지되면 부드럽게 주제를 돌리라"는 지시 포함.
+Action: 2번 단계에서 적발 시 notifications 테이블에 기록 및 부모 푸시 발송.
+
+② 결제 및 프리미엄 로직 (RevenueCat 연동)
+구매: 클라이언트에서 RevenueCat SDK로 결제 수행.
+검증: Webhook을 통해 Supabase DB의 profiles 테이블 (is_premium, gems) 업데이트.
+예외 처리: IAP로 '에너지' 구매 시, 해당 세션 플래그를 skip_queue: true로 설정하여 즉시 피드백 제공.
+
+③ 데이터 콜드 스타트 대응
+초기 리포트: 베타 유저 500명 달성 전까지는 "또래 비교" UI를 숨기고, "교육부 권장 성취도(절대평가)" 그래프만 노출.
+
+4. API 설계 (주요 Endpoints)
+Method, Endpoint, 기능 및 보안
+POST, /api/auth/guest, 게스트 로그인 (익명 계정 생성).
+POST, /api/study/submit, (핵심) 필터링 → AI 처리 → 저장. (RLS 적용).
+POST, /api/shop/purchase, 아이템 구매 (트랜잭션). RevenueCat 검증.
+GET, /api/ugc/my-library, (안전) 내 글만 조회. (공개 갤러리 API는 추후 개발).
+POST, /api/parents/push-token, 부모님 기기의 FCM 토큰 등록.
+
+5. 개발 로드맵 (Action Plan)
+Phase 1. 기반 및 보안 (Week 1)
+Supabase 프로젝트 생성 및 RLS 정책이 포함된 SQL 실행.
+Next.js PWA 세팅 + OpenAI Moderation 연동 테스트.
+RevenueCat 계정 생성 및 샌드박스 테스트.
+
+Phase 2. 핵심 경험 (Week 2-3)
+게스트 모드 → L1 체험 → 가입 온보딩 플로우 구현.
+AI 탐험대장 프롬프트 튜닝 및 Writing 기능 개발.
+
+Phase 3. 확장 및 런칭 (Week 4)
+상점(아이템 구매) 구현.
+학부모 리포트 UI 개발.
+내부 베타 테스트 진행 (지인 10명).
+
+🎁 [부록] Supabase 최종 SQL 스크립트 (즉시 실행용)
+Grok이 강조한 RLS(보안), 인덱싱(성능), 아이템 정규화가 모두 적용된 코드입니다. 복사해서 Supabase SQL Editor에 실행하세요.
+
+SQL
+
+-- 1. 유저 프로필 (재화 및 상태)
+create table profiles (
+  id uuid references auth.users not null primary key,
+  grade int,
+  publisher text, -- 'chunjae', 'ybm'
+  level int default 1,
+  -- 재화
+  energy int default 5,
+  gems int default 0,
+  -- 상태 및 제한
+  is_premium boolean default false,
+  vision_usage_today int default 0,
+  feedback_usage_today int default 0,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+-- 2. 상점 아이템 (확장성 고려)
+create table shop_items (
+  id bigint generated by default as identity primary key,
+  name text not null,
+  type text not null, -- 'outfit', 'decoration'
+  cost_gems int not null,
+  image_url text
+);
+-- 3. 유저 인벤토리
+create table user_inventory (
+  id bigint generated by default as identity primary key,
+  user_id uuid references profiles(id) not null,
+  item_id bigint references shop_items(id) not null,
+  is_equipped boolean default false,
+  created_at timestamp default now()
+);
+-- 4. 학습 로그 (UGC 안전장치 포함)
+create table study_logs (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) not null,
+  mission_text text,
+  user_input text,
+  ai_feedback jsonb,
+  -- 상태 관리
+  status text default 'completed', -- 'queued'
+  is_public boolean default false, -- 초기엔 false로 고정 (나만의 도서관)
+  created_at timestamp default now()
+);
+-- 5. 보안 정책 (RLS - 필수!)
+alter table profiles enable row level security;
+alter table user_inventory enable row level security;
+alter table study_logs enable row level security;
+-- "내 데이터는 나만 볼 수 있다" 정책
+create policy "Users can view own profile" on profiles for select using (auth.uid() = id);
+create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
+create policy "Users can view own logs" on study_logs for select using (auth.uid() = user_id);
+create policy "Users can insert own logs" on study_logs for insert with check (auth.uid() = user_id);
+-- 6. 성능 인덱싱
+create index idx_logs_user_date on study_logs (user_id, created_at desc);
+create index idx_inventory_user on user_inventory (user_id);

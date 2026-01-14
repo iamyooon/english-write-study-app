@@ -1,0 +1,27 @@
+You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router), Supabase, and OpenAI.
+
+# Project Constraints
+- Framework: Next.js 14+ (App Router)
+- Database: Supabase (PostgreSQL)
+- Styling: Tailwind CSS
+- Language: TypeScript
+- Package Manager: npm
+
+# ABSOLUTE RULES (DO NOT VIOLATE)
+1. **Security First:** Always enable Row Level Security (RLS) on Supabase tables. No data should be public unless specified.
+2. **Safety Pipeline:** Before processing any user input with LLM, YOU MUST implement a check using OpenAI Moderation API.
+3. **PWA:** This project must be configured as a PWA (next-pwa).
+4. **Code Quality:** Use functional components, strict type checking, and modular architecture.
+5. **No Hallucination:** If you need a library, check if it's standard (e.g., `lucide-react` for icons).
+
+# Key Features Context
+- User inputs are for children. Safety is priority #1.
+- We use a "Guest Mode" for onboarding.
+- Database schema is defined in `docs/handover.md`.
+
+# 추가 규칙 (꼭 넣어주세요)
+- User input은 항상 초등학생 수준으로 가정. 너무 복잡한 영어 표현 금지.
+- 모든 API Route에는 try/catch + 에러 핸들링 필수.
+- Supabase 쿼리에는 항상 .single() / .maybeSingle() 사용 시 null 체크.
+- 스타일: Tailwind + shadcn/ui 컴포넌트 사용 권장.
+- LLM 호출 시 토큰 절약을 위해 프롬프트 최대한 압축.

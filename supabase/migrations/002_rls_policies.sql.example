@@ -1,0 +1,94 @@
+-- Row Level Security (RLS) 정책 설정
+-- 
+-- 보안 규칙: 모든 테이블에 RLS 적용 필수
+-- "내 데이터는 나만 조회/수정 가능"
+
+-- RLS 활성화
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE study_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedbacks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE character_customizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_usage ENABLE ROW LEVEL SECURITY;
+
+-- profiles 테이블 정책
+-- 사용자는 자신의 프로필만 조회/수정 가능
+CREATE POLICY "Users can view own profile"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+  ON profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- study_logs 테이블 정책
+-- 사용자는 자신의 Writing 로그만 조회/생성 가능
+CREATE POLICY "Users can view own study logs"
+  ON study_logs FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own study logs"
+  ON study_logs FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own study logs"
+  ON study_logs FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- feedbacks 테이블 정책
+-- 사용자는 자신의 피드백만 조회 가능
+CREATE POLICY "Users can view own feedbacks"
+  ON feedbacks FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- character_customizations 테이블 정책
+-- 사용자는 자신의 캐릭터 커스터마이징만 조회/수정 가능
+CREATE POLICY "Users can view own character"
+  ON character_customizations FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own character"
+  ON character_customizations FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own character"
+  ON character_customizations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- inventory_items 테이블 정책
+-- 사용자는 자신의 인벤토리만 조회 가능
+CREATE POLICY "Users can view own inventory"
+  ON inventory_items FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own inventory items"
+  ON inventory_items FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- payment_logs 테이블 정책
+-- 사용자는 자신의 결제 로그만 조회 가능
+CREATE POLICY "Users can view own payment logs"
+  ON payment_logs FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- daily_usage 테이블 정책
+-- 사용자는 자신의 사용량만 조회/수정 가능
+CREATE POLICY "Users can view own daily usage"
+  ON daily_usage FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own daily usage"
+  ON daily_usage FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own daily usage"
+  ON daily_usage FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- 서비스 역할(Service Role)은 모든 작업 가능 (서버 사이드에서만 사용)
+-- 주의: Service Role Key는 절대 클라이언트에 노출하지 말 것!
