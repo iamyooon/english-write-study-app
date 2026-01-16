@@ -45,7 +45,8 @@ export default function OnboardingPage() {
       }
 
       toast.success('시작 준비가 완료되었습니다!')
-      router.push('/writing')
+      // Placement Test 페이지로 이동
+      router.push('/placement')
     } catch (error: any) {
       console.error('온보딩 오류:', error)
       toast.error(error.message || '오류가 발생했습니다.')

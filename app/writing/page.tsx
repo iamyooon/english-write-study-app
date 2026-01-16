@@ -37,8 +37,11 @@ export default function WritingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high'>('elementary_low')
   const [level, setLevel] = useState(1)
+  const [placementLevel, setPlacementLevel] = useState<number | null>(null)
+  const [recommendedLevel, setRecommendedLevel] = useState<number | null>(null)
+  const [showRecommendation, setShowRecommendation] = useState(false)
 
-  // 사용자 세션 확인
+  // 사용자 세션 확인 및 placement_level 가져오기
   useEffect(() => {
     const checkSession = async () => {
       const supabase = createClient()
@@ -49,6 +52,43 @@ export default function WritingPage() {
       if (!session) {
         // 세션이 없으면 온보딩으로 리다이렉트
         window.location.href = '/onboarding'
+        return
+      }
+
+      // URL 파라미터에서 placement_level 확인
+      const urlParams = new URLSearchParams(window.location.search)
+      const placementLevelParam = urlParams.get('placement_level')
+      if (placementLevelParam) {
+        const level = parseInt(placementLevelParam, 10)
+        setPlacementLevel(level)
+        setRecommendedLevel(level)
+        setLevel(level)
+        setShowRecommendation(true)
+        
+        // 프로필에도 저장
+        await supabase
+          .from('profiles')
+          .update({ placement_level: level, level })
+          .eq('id', session.user.id)
+      } else {
+        // 프로필에서 placement_level 가져오기
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('placement_level, grade')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile) {
+          if (profile.placement_level) {
+            setPlacementLevel(profile.placement_level)
+            setRecommendedLevel(profile.placement_level)
+            setLevel(profile.placement_level)
+          }
+          
+          if (profile.grade) {
+            setGradeLevel(profile.grade <= 3 ? 'elementary_low' : 'elementary_high')
+          }
+        }
       }
     }
     checkSession()
@@ -152,9 +192,36 @@ export default function WritingPage() {
           영어 문장 쓰기
         </h1>
 
+        {/* Placement Test 결과 기반 레벨 추천 */}
+        {showRecommendation && recommendedLevel && (
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold text-indigo-800 mb-1">
+                  🎯 추천 레벨
+                </div>
+                <div className="text-lg font-bold text-indigo-600">
+                  레벨 {recommendedLevel}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Placement Test 결과를 바탕으로 추천된 레벨입니다.
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRecommendation(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 수준 선택 */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">수준 선택</label>
+          <label className="block text-sm font-medium text-gray-700">
+            수준 선택 {placementLevel && `(추천: 레벨 ${placementLevel})`}
+          </label>
           <div className="flex gap-4">
             <button
               onClick={() => setGradeLevel('elementary_low')}
@@ -177,6 +244,24 @@ export default function WritingPage() {
               고학년
             </button>
           </div>
+          {placementLevel && (
+            <div className="flex items-center gap-2 mt-2">
+              <label className="block text-sm font-medium text-gray-700">
+                레벨:
+              </label>
+              <select
+                value={level}
+                onChange={(e) => setLevel(parseInt(e.target.value, 10))}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
+              >
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    레벨 {lvl} {lvl === placementLevel ? '(추천)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* 한글 문장 */}

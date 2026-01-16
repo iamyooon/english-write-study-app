@@ -33,6 +33,7 @@ export interface Database {
           is_premium: boolean
           vision_usage_today: number
           feedback_usage_today: number
+          placement_level: number | null
           created_at: string
           updated_at: string
         }
@@ -46,6 +47,7 @@ export interface Database {
           is_premium?: boolean
           vision_usage_today?: number
           feedback_usage_today?: number
+          placement_level?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -59,6 +61,7 @@ export interface Database {
           is_premium?: boolean
           vision_usage_today?: number
           feedback_usage_today?: number
+          placement_level?: number | null
           created_at?: string
           updated_at?: string
         }
