@@ -1,0 +1,21 @@
+﻿vercel에서 아래 에러가 발생했어. 너 테스트는 돌리고 올렸냐
+
+Running build in Portland, USA (West) – pdx1
+Build machine configuration: 2 cores, 8 GB
+Cloning github.com/iamyooon/english-write-study-app (Branch: main, Commit: c4a9967)
+Cloning completed: 509.000ms
+Restored build cache from previous deployment (DEsWyzHdvLwpAhGsFRMZ3611tpeC)
+Running "vercel build"
+Vercel CLI 50.1.6
+Running "install" command: `npm install`...
+up to date, audited 339 packages in 2s
+99 packages are looking for funding
+  run `npm fund` for details
+4 moderate severity vulnerabilities
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+> english-write-study-app@1.0.0 build
+> tsc && vite build
+services/SentenceService.test.ts(6,1): error TS2304: Cannot find name 'global'.
+Error: Command "npm run build" exited with 2
