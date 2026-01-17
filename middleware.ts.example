@@ -1,0 +1,114 @@
+/**
+ * Next.js Middleware
+ * 
+ * 사용법:
+ * 1. 이 파일을 middleware.ts로 복사
+ * 2. Supabase SSR 설정 확인
+ * 3. 라우트 보호 로직 추가
+ */
+
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  // Supabase 클라이언트 생성 (미들웨어용)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  // 세션 확인
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  // 보호된 라우트 체크
+  const protectedPaths = ['/writing', '/library', '/report', '/shop', '/character']
+  const authPaths = ['/login', '/signup']
+  const guestPaths = ['/onboarding']
+  
+  const isProtectedPath = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+  const isAuthPath = authPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+  const isGuestPath = guestPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  // 로그인하지 않은 사용자가 보호된 경로 접근 시
+  if (isProtectedPath && !session) {
+    const redirectUrl = new URL('/onboarding', request.url)
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // 로그인한 사용자가 인증 페이지 접근 시
+  if (isAuthPath && session) {
+    return NextResponse.redirect(new URL('/writing', request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: [
+    /*
+     * 다음 경로를 제외한 모든 요청 경로와 일치:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public 폴더의 파일들
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

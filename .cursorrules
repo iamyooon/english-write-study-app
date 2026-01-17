@@ -1,0 +1,56 @@
+You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router), Supabase, and OpenAI.
+
+# Project Constraints
+- Framework: Next.js 14+ (App Router)
+- Database: Supabase (PostgreSQL)
+- Styling: Tailwind CSS
+- Language: TypeScript
+- Package Manager: npm
+
+# ABSOLUTE RULES (DO NOT VIOLATE)
+1. **Security First:** Always enable Row Level Security (RLS) on Supabase tables. No data should be public unless specified.
+2. **Safety Pipeline:** Before processing any user input with LLM, YOU MUST implement a check using OpenAI Moderation API.
+3. **PWA:** This project must be configured as a PWA (next-pwa).
+4. **Code Quality:** Use functional components, strict type checking, and modular architecture.
+5. **No Hallucination:** If you need a library, check if it's standard (e.g., `lucide-react` for icons).
+
+# Key Features Context
+- User inputs are for children. Safety is priority #1.
+- We use a "Guest Mode" for onboarding.
+- Database schema is defined in `docs/handover.md`.
+
+# 추가 규칙 (꼭 넣어주세요)
+- User input은 항상 초등학생 수준으로 가정. 너무 복잡한 영어 표현 금지.
+- 모든 API Route에는 try/catch + 에러 핸들링 필수.
+- Supabase 쿼리에는 항상 .single() / .maybeSingle() 사용 시 null 체크.
+- 스타일: Tailwind + shadcn/ui 컴포넌트 사용 권장.
+- LLM 호출 시 토큰 절약을 위해 프롬프트 최대한 압축.
+
+# Jira 자동 로깅 규칙 (필수)
+- **작업 완료 시 반드시 Jira 코멘트 추가**: 모든 작업이 완료된 후에는 자동으로 Jira에 작업 요약을 코멘트로 남겨야 합니다.
+- **기본 이슈 키**: `WEB-295` (개발 태스크)
+- **작업 요약 형식**:
+  ```
+  ## 작업 완료 요약
+  
+  ### 완료된 작업
+  - [작업 1]
+  - [작업 2]
+  
+  ### 주요 변경사항
+  - [변경사항 1]
+  - [변경사항 2]
+  
+  ### 생성/수정된 파일
+  - [파일 경로 1]
+  - [파일 경로 2]
+  
+  ### 다음 단계 (선택사항)
+  - [다음 작업]
+  ```
+- **실행 방법**: `node scripts/log-to-jira.mjs "작업 요약 내용" --issue WEB-295`
+- **주의사항**: 
+  - 작업 요약은 한글로 작성
+  - 명확하고 간결하게 작성
+  - 사용자에게 먼저 요약을 보여주고, 확인 후 Jira에 추가
+  - 사용자가 명시적으로 요청하지 않아도 자동으로 수행
