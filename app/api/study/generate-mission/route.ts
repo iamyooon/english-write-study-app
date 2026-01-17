@@ -44,16 +44,25 @@ export async function POST(request: Request) {
         ? '초등학교 저학년(1-3학년) 수준의 간단한 문장'
         : '초등학교 고학년(4-6학년) 수준의 문장'
 
-    const prompt = `다음 조건에 맞는 한글 문장을 하나만 생성해주세요:
+    const prompt = `다음 조건에 맞는 한글 문장과 함께 어휘 목록과 예시 문장을 생성해주세요:
 - 대상: ${levelDescription}
 - 난이도 레벨: ${level}/10
 - 주제: 일상생활, 가족, 학교, 취미 등 초등학생에게 친숙한 주제
 - 길이: ${gradeLevel === 'elementary_low' ? '5-8단어' : '8-12단어'}
-- 형식: JSON으로 {"korean": "생성된 한글 문장"} 형태로 응답
+
+다음 JSON 형식으로 응답해주세요:
+{
+  "korean": "생성된 한글 문장",
+  "vocabulary": ["주요 단어1", "주요 단어2", "주요 단어3"],
+  "example": "영어 예시 문장"
+}
+
+- vocabulary: 한글 문장을 영어로 번역할 때 필요한 주요 단어 3-5개 (영어 단어)
+- example: 한글 문장을 영어로 번역한 예시 문장 (초등학생 수준의 간단한 영어)
 
 예시:
-- 저학년: {"korean": "나는 사과를 좋아해요"}
-- 고학년: {"korean": "나는 매일 아침 일찍 일어나서 운동을 해요"}`
+- 저학년: {"korean": "나는 사과를 좋아해요", "vocabulary": ["I", "like", "apple"], "example": "I like apples."}
+- 고학년: {"korean": "나는 매일 아침 일찍 일어나서 운동을 해요", "vocabulary": ["I", "every", "morning", "early", "exercise"], "example": "I wake up early every morning and exercise."}`
 
     // OpenAI API 호출
     const completion = await openai.chat.completions.create({
@@ -70,7 +79,7 @@ export async function POST(request: Request) {
         },
       ],
       temperature: 0.7,
-      max_tokens: 100,
+      max_tokens: 300,
       response_format: { type: 'json_object' },
     })
 
@@ -81,6 +90,8 @@ export async function POST(request: Request) {
 
     const parsedResponse = JSON.parse(responseText)
     const koreanSentence = parsedResponse.korean
+    const vocabulary = parsedResponse.vocabulary || []
+    const example = parsedResponse.example || ''
 
     if (!koreanSentence) {
       throw new Error('생성된 문장을 찾을 수 없습니다.')
@@ -90,6 +101,8 @@ export async function POST(request: Request) {
       success: true,
       mission: {
         korean: koreanSentence,
+        vocabulary: Array.isArray(vocabulary) ? vocabulary : [],
+        example: example,
         gradeLevel,
         level,
       },

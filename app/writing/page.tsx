@@ -12,6 +12,8 @@ import toast from 'react-hot-toast'
 
 interface Mission {
   korean: string
+  vocabulary?: string[]
+  example?: string
   gradeLevel: 'elementary_low' | 'elementary_high'
   level: number
 }
@@ -286,6 +288,42 @@ export default function WritingPage() {
             )}
           </div>
         </div>
+
+        {/* 어휘 노출 */}
+        {mission && mission.vocabulary && mission.vocabulary.length > 0 && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              📚 도움이 될 단어들
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {mission.vocabulary.map((word, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-300"
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 예시 문장 */}
+        {mission && mission.example && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              💡 예시 문장
+            </label>
+            <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+              <p className="text-lg font-medium text-purple-800 italic">
+                {mission.example}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                참고만 하세요! 자신만의 문장을 만들어보세요.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* 영어 입력 */}
         <div className="space-y-2">

@@ -85,6 +85,16 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     - docs/IMPLEMENTATION_GAPS.md: 에너지 시스템 구현 완료로 상태 변경
     ```
 
+# 커밋/푸시/Jira 코멘트 단축어 (커푸콜)
+- **"커푸콜" 명령어**: 사용자가 "커푸콜" 또는 "커밋+푸쉬+코멘트"라고 요청하면 다음 작업을 순차적으로 자동 실행:
+  1. 테스트 실행 (`npm test` 또는 `npx vitest run`)
+  2. 변경사항 스테이징 (`git add`)
+  3. 커밋 생성 (테스트 결과 포함)
+  4. 푸시 (`git push origin main`)
+  5. Jira 코멘트 추가 (`node scripts/log-to-jira.mjs`)
+- **자동화**: 사용자가 명시적으로 요청하지 않아도 "커푸콜"이라고 말하면 자동으로 모든 과정을 진행
+- **에러 처리**: 각 단계에서 실패하면 사용자에게 알리고 중단
+
 # Jira 자동 로깅 규칙 (필수)
 - **작업 완료 시 반드시 Jira 코멘트 추가**: 모든 작업이 완료된 후에는 자동으로 Jira에 작업 요약을 코멘트로 남겨야 합니다.
 - **기본 이슈 키**: `WEB-295` (개발 태스크)
