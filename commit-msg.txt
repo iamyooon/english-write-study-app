@@ -1,8 +1,0 @@
-fix: Placement Test API에 OpenAI Moderation 추가
-
-Placement Test 제출 API에 OpenAI Moderation 검사 추가
-- 사용자 답변(userAnswer)을 GPT 호출 전에 모든 답변을 순회하며 검사
-- 부적절한 내용 감지 시 400 에러 반환 및 문제 문항 인덱스 포함
-- 보안 규칙 준수: 모든 사용자 입력이 LLM 처리 전에 Moderation 경유
-
-수정된 파일: app/api/placement/submit/route.ts

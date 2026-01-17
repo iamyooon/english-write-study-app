@@ -13,6 +13,19 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
 3. **PWA:** This project must be configured as a PWA (next-pwa).
 4. **Code Quality:** Use functional components, strict type checking, and modular architecture.
 5. **No Hallucination:** If you need a library, check if it's standard (e.g., `lucide-react` for icons).
+6. **Test-Driven Development (TDD) - MANDATORY:** 
+   - **모든 코드 구현은 반드시 테스트 코드를 작성해야 합니다.**
+   - **테스트가 통과할 때까지 코드를 수정해야 합니다.**
+   - 새 기능 구현 시:
+     a. 먼저 테스트 코드 작성 (`.test.ts` 또는 `.spec.ts`)
+     b. 테스트 실행 및 실패 확인
+     c. 최소한의 코드로 테스트 통과하도록 구현
+     d. 테스트 통과 확인
+   - API Route 구현 시: 유닛 테스트 + 통합 테스트 작성 필수
+   - 유틸리티 함수/모듈 구현 시: 유닛 테스트 작성 필수
+   - 컴포넌트 구현 시: React Testing Library를 사용한 컴포넌트 테스트 작성 권장
+   - 테스트 실행 명령어: `npm test` 또는 `npx vitest run`
+   - **테스트가 실패하면 코드를 수정하여 반드시 모든 테스트가 통과하도록 해야 합니다.**
 
 # Key Features Context
 - User inputs are for children. Safety is priority #1.
