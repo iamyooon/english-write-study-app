@@ -1,14 +1,26 @@
 /**
  * 홈 페이지
- * 게스트 모드 진입점
+ * 게스트 모드 진입점 + 에너지 게이지 표시
  */
 
 import Link from 'next/link'
+import { getProfile } from '@/lib/supabase/server'
+import EnergyGauge from '@/components/EnergyGauge'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const profile = await getProfile()
+  const currentEnergy = profile?.energy || 100
+
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        {/* 에너지 게이지 (로그인된 경우) */}
+        {profile && (
+          <div className="flex justify-center pb-4 border-b border-gray-200">
+            <EnergyGauge currentEnergy={currentEnergy} size="md" showCountdown={true} />
+          </div>
+        )}
+
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             영어 Writing 놀이터

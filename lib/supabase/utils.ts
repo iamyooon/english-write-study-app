@@ -8,9 +8,12 @@ import { createClient } from './server'
 import { Profile, StudyLog, UserInventory, ShopItem } from '@/types/database'
 
 /**
- * 사용자의 에너지 소모 및 복구
+ * 사용자의 에너지 소모 (미션 1회당 100 소비)
+ * @param userId 사용자 ID
+ * @param amount 소비할 에너지 양 (기본값: 100)
+ * @returns 업데이트된 프로필
  */
-export async function consumeEnergy(userId: string, amount: number = 1) {
+export async function consumeEnergy(userId: string, amount: number = 100) {
   const supabase = await createClient()
   
   // 현재 에너지 조회
@@ -22,6 +25,11 @@ export async function consumeEnergy(userId: string, amount: number = 1) {
 
   if (fetchError || !profile) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
+  }
+
+  // 에너지 부족 체크
+  if (profile.energy < amount) {
+    throw new Error(`Insufficient energy: ${profile.energy}/${amount}`)
   }
 
   // 에너지 차감 (최소 0)
@@ -39,6 +47,93 @@ export async function consumeEnergy(userId: string, amount: number = 1) {
   }
 
   return data
+}
+
+/**
+ * 사용자의 에너지 생산 (작성 문장당 +10)
+ * @param userId 사용자 ID
+ * @param amount 생산할 에너지 양 (기본값: 10)
+ * @returns 업데이트된 프로필
+ */
+export async function produceEnergy(userId: string, amount: number = 10) {
+  const supabase = await createClient()
+  
+  // 현재 에너지 조회
+  const { data: profile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('energy')
+    .eq('id', userId)
+    .single()
+
+  if (fetchError || !profile) {
+    throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
+  }
+
+  // 에너지 증가 (최대 100)
+  const newEnergy = Math.min(profile.energy + amount, 100)
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ energy: newEnergy })
+    .eq('id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to produce energy: ${error.message}`)
+  }
+
+  return data
+}
+
+/**
+ * 자정 에너지 자동 충전 (매일 100으로 충전)
+ * @param userId 사용자 ID
+ * @returns 업데이트된 프로필
+ */
+export async function chargeEnergyDaily(userId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ 
+      energy: 100,
+      energy_last_charged: new Date().toISOString()
+    })
+    .eq('id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to charge energy: ${error.message}`)
+  }
+
+  return data
+}
+
+/**
+ * 자정 에너지 충전이 필요한 사용자들 찾기
+ * @returns 충전이 필요한 사용자 ID 목록
+ */
+export async function getUsersNeedingEnergyCharge() {
+  const supabase = await createClient()
+  
+  // 오늘 자정 시간 계산 (UTC 기준)
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+  const todayStart = today.toISOString()
+  
+  // 어제 자정 이후로 충전하지 않은 사용자 찾기
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, energy_last_charged')
+    .or(`energy_last_charged.is.null,energy_last_charged.lt.${todayStart}`)
+
+  if (error) {
+    throw new Error(`Failed to fetch users needing charge: ${error.message}`)
+  }
+
+  return data.map(profile => profile.id)
 }
 
 /**

@@ -14,9 +14,21 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // 환경 변수 확인
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('⚠️ Supabase 환경 변수가 설정되지 않았습니다.')
+    console.error('📝 .env.local 파일을 생성하고 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요.')
+    console.error('📖 참고: ENV_TEMPLATE.md 또는 SUPABASE_PROJECT_SETUP.md 파일을 확인하세요.')
+    // 환경 변수가 없어도 앱이 계속 실행되도록 기본값 반환
+    return supabaseResponse
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

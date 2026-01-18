@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { moderateContent } from '@/lib/openai/moderation'
 import { openai } from '@/lib/openai/client'
+import { consumeEnergy, produceEnergy } from '@/lib/supabase/utils'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -45,6 +46,24 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+    }
+
+    // 에너지 체크 및 소비 (미션 1회당 100 소비)
+    try {
+      await consumeEnergy(user.id, 100)
+    } catch (error) {
+      // 에너지 부족 시 에러 반환
+      if (error instanceof Error && error.message.includes('Insufficient energy')) {
+        return NextResponse.json(
+          {
+            error: '에너지가 부족합니다. 내일 에너지가 충전되면 다시 시도해주세요.',
+            energyRequired: 100,
+            currentEnergy: profile.energy || 0,
+          },
+          { status: 403 }
+        )
+      }
+      throw error // 다른 에러는 그대로 전파
     }
 
     // 3중 필터링: 2단계 - OpenAI Moderation
@@ -133,6 +152,18 @@ export async function POST(request: Request) {
       }
     }
 
+    // 에너지 생산 (작성 문장당 +10) - 미션 완료 시에만
+    let energyGained = 0
+    if (queueStatus === 'completed') {
+      try {
+        await produceEnergy(user.id, 10)
+        energyGained = 10
+      } catch (error) {
+        console.error('에너지 생산 실패:', error)
+        // 에너지 생산 실패는 치명적이지 않으므로 로그만 남기고 계속 진행
+      }
+    }
+
     // study_logs에 저장
     // 참고: 실제 스키마에 맞춰 필드 제한 (queue_position, grade_level, level, moderation_passed, moderation_details는 스키마에 없음)
     const { data: studyLog, error: logError } = await supabase
@@ -144,6 +175,7 @@ export async function POST(request: Request) {
         ai_feedback: aiFeedback,
         status: queueStatus,
         is_public: false,
+        energy_gained: energyGained,
       })
       .select()
       .single()
@@ -162,6 +194,7 @@ export async function POST(request: Request) {
       feedback: aiFeedback,
       queueStatus,
       queuePosition,
+      energyGained,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
