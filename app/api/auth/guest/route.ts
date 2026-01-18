@@ -19,6 +19,18 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { gradeLevel } = guestRequestSchema.parse(body)
 
+    // 환경 변수 확인
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('⚠️ Supabase 환경 변수가 설정되지 않았습니다.')
+      return NextResponse.json(
+        { 
+          error: 'Supabase 환경 변수가 설정되지 않았습니다.',
+          details: '.env.local 파일에 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요.'
+        },
+        { status: 500 }
+      )
+    }
+
     const supabase = await createClient()
 
     // 익명 사용자 생성 (Supabase Auth)
@@ -62,11 +74,12 @@ export async function POST(request: Request) {
     const profileData: any = {
       id: userId,
       level: 1,
-      energy: 5,
+      energy: 100, // 에너지 시스템: 기본값 100
       gems: 0,
       is_premium: false,
       vision_usage_today: 0,
       feedback_usage_today: 0,
+      energy_last_charged: new Date().toISOString(), // 에너지 시스템: 충전 시점 기록
     }
 
     if (gradeLevel) {
@@ -85,8 +98,18 @@ export async function POST(request: Request) {
 
     if (profileError) {
       console.error('프로필 생성 실패:', profileError)
-      // 인증은 성공했으므로 프로필 없이도 계속 진행
-      // 하지만 에러 정보는 반환
+      // RLS 정책 문제일 수 있으므로 상세 에러 정보 반환
+      if (profileError.code === '42501' || profileError.message?.includes('policy')) {
+        return NextResponse.json(
+          {
+            error: '프로필 생성 권한이 없습니다.',
+            details: 'Supabase RLS 정책을 확인해주세요. profiles 테이블에 INSERT 정책이 필요합니다.',
+            profileError: profileError.message,
+          },
+          { status: 403 }
+        )
+      }
+      // 다른 에러는 인증은 성공했으므로 계속 진행
     }
 
     return NextResponse.json({
@@ -108,10 +131,26 @@ export async function POST(request: Request) {
     }
 
     console.error('게스트 인증 오류:', error)
+    
+    // 더 구체적인 에러 메시지 제공
+    let errorMessage = '서버 오류가 발생했습니다.'
+    let errorDetails = error instanceof Error ? error.message : String(error)
+    
+    // JSON 파싱 오류
+    if (error instanceof SyntaxError) {
+      errorMessage = '요청 데이터 형식이 올바르지 않습니다.'
+    }
+    
+    // 환경 변수 관련 오류
+    if (errorDetails.includes('URL') || errorDetails.includes('KEY')) {
+      errorMessage = 'Supabase 환경 변수가 설정되지 않았습니다.'
+      errorDetails = '.env.local 파일에 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요.'
+    }
+    
     return NextResponse.json(
       { 
-        error: '서버 오류가 발생했습니다.',
-        details: error instanceof Error ? error.message : String(error)
+        error: errorMessage,
+        details: errorDetails
       },
       { status: 500 }
     )
