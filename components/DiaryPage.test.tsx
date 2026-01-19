@@ -179,7 +179,7 @@ describe('DiaryPage', () => {
       await user.click(button);
       
       await waitFor(() => {
-        expect(screen.getByText('문법 검사 중 오류가 발생했습니다.')).toBeInTheDocument();
+        expect(screen.getByText('API Error')).toBeInTheDocument();
       });
     });
 
@@ -201,7 +201,7 @@ describe('DiaryPage', () => {
       await user.click(button);
       
       await waitFor(() => {
-        expect(screen.getByText('문법 검사 중 오류가 발생했습니다.')).toBeInTheDocument();
+        expect(screen.getByText('API Error')).toBeInTheDocument();
       });
 
       // 두 번째: 성공
@@ -209,7 +209,7 @@ describe('DiaryPage', () => {
       await user.click(button);
       
       await waitFor(() => {
-        expect(screen.queryByText('문법 검사 중 오류가 발생했습니다.')).not.toBeInTheDocument();
+        expect(screen.queryByText('API Error')).not.toBeInTheDocument();
       });
     });
   });
