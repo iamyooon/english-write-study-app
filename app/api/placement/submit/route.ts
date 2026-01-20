@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { moderateContent } from '@/lib/openai/moderation'
 import { openai } from '@/lib/openai/client'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -46,6 +47,23 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+    }
+
+    // 3중 필터링: 2단계 - OpenAI Moderation (모든 답변 검사)
+    for (const answer of answers) {
+      const moderationResult = await moderateContent(answer.userAnswer)
+      
+      if (moderationResult.flagged) {
+        // 부적절한 내용 감지 시 부모에게 알림 (TODO: FCM 구현)
+        return NextResponse.json(
+          {
+            error: '부적절한 내용이 감지되었습니다.',
+            details: moderationResult.details,
+            questionIndex: answers.indexOf(answer) + 1,
+          },
+          { status: 400 }
+        )
+      }
     }
 
     // GPT-4o로 Placement Test 평가

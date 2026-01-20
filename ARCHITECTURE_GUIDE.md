@@ -785,11 +785,145 @@ english-write-study-app/
 
 ---
 
+## 11. API 엔드포인트 (Next.js App Router)
+
+**업데이트**: 2026-01-18 - 에너지 시스템 API 추가
+
+### 11.1 미션 생성 API
+
+**엔드포인트**: `POST /api/study/generate-mission`
+
+**기능**: 수준에 맞는 한글 문장, 어휘 목록, 예시 문장을 생성합니다.
+
+**요청 형식**:
+```json
+{
+  "gradeLevel": "elementary_low" | "elementary_high",
+  "level": 1-10
+}
+```
+
+**응답 형식**:
+```json
+{
+  "success": true,
+  "mission": {
+    "korean": "나는 사과를 좋아해요",
+    "vocabulary": ["I", "like", "apple"],
+    "example": "I like apples.",
+    "gradeLevel": "elementary_low",
+    "level": 1
+  }
+}
+```
+
+**주요 변경사항 (2026-01-17)**:
+- `vocabulary` 필드 추가: 한글 문장을 영어로 번역할 때 필요한 주요 단어 3-5개
+- `example` 필드 추가: 한글 문장을 영어로 번역한 예시 문장
+- OpenAI API 프롬프트 개선: 어휘와 예시를 함께 생성하도록 확장
+- `max_tokens` 증가: 100 → 300 (어휘와 예시 포함)
+
+**테스트**: `app/api/study/generate-mission/route.test.ts` (4개 테스트 통과)
+
+### 11.2 에너지 시스템 API
+
+**엔드포인트**: `POST /api/energy/charge-daily`
+
+**기능**: 자정 이후에 실행하여 에너지가 부족한 사용자들의 에너지를 100으로 충전합니다.
+
+**요청 형식**: 인증 필요 (GET 또는 POST)
+
+**응답 형식**:
+```json
+{
+  "success": true,
+  "message": "에너지 충전 완료: 5명 성공, 0명 실패",
+  "chargedCount": 5,
+  "failedCount": 0,
+  "totalUsers": 5
+}
+```
+
+**주요 기능**:
+- `getUsersNeedingEnergyCharge()`: 오늘 자정 이후로 충전하지 않은 사용자 찾기
+- `chargeEnergyDaily(userId)`: 각 사용자의 에너지를 100으로 충전, `energy_last_charged` 업데이트
+
+**사용 방법**:
+- Supabase Edge Function 또는 Cron Job에서 주기적으로 호출 (예: 매일 자정)
+- 개발 환경에서는 수동으로 `GET /api/energy/charge-daily` 호출 가능
+
+**테스트**: `lib/supabase/utils.test.ts` (6개 테스트 통과)
+
+### 11.3 Writing 제출 API - 에너지 시스템 통합
+
+**엔드포인트**: `POST /api/study/submit`
+
+**에너지 관련 변경사항 (2026-01-18)**:
+- **에너지 소비**: 미션 시작 시 에너지 100 소비 (부족 시 403 에러 반환)
+- **에너지 생산**: 미션 완료 시 에너지 +10 생산 (최대 100)
+- **응답 필드**: `energyGained` 필드 추가 (이번 미션에서 획득한 에너지)
+
+**에너지 부족 시 응답**:
+```json
+{
+  "error": "에너지가 부족합니다. 내일 에너지가 충전되면 다시 시도해주세요.",
+  "energyRequired": 100,
+  "currentEnergy": 50
+}
+```
+
+**정상 응답 (에너지 관련 필드 추가)**:
+```json
+{
+  "success": true,
+  "studyLog": {...},
+  "feedback": {...},
+  "energyGained": 10
+}
+```
+
+### 11.4 Writing 페이지 UI 구조
+
+**파일**: `app/writing/page.tsx`
+
+**주요 기능**:
+1. 미션 제시: 한글 문장 표시
+2. **어휘 노출**: 주요 단어를 노란색 배지 형태로 표시 (새로 추가)
+3. **예시 문장**: 보라색 박스 형태로 영어 예시 문장 표시 (새로 추가)
+4. 작성: 영어 입력 필드
+5. LLM 피드백: AI 평가 결과 표시
+
+**UI 컴포넌트 구조**:
+```
+WritingPage
+├── 한글 문장 (기존)
+├── 어휘 노출 (새로 추가)
+│   └── vocabulary.map() → 노란색 배지
+├── 예시 문장 (새로 추가)
+│   └── 보라색 박스 + 참고 메시지
+├── 영어 입력 (기존)
+└── 피드백 표시 (기존)
+```
+
+**Mission 타입 확장**:
+```typescript
+interface Mission {
+  korean: string
+  vocabulary?: string[]  // 새로 추가
+  example?: string       // 새로 추가
+  gradeLevel: 'elementary_low' | 'elementary_high'
+  level: number
+}
+```
+
+---
+
 ## 📝 참고사항
 
 ### 주요 디렉토리 설명
-- **components/**: React UI 컴포넌트
-- **services/**: 비즈니스 로직 및 API 통신
+- **app/**: Next.js App Router 페이지 및 API 라우트
+- **components/**: React UI 컴포넌트 (레거시)
+- **services/**: 비즈니스 로직 및 API 통신 (레거시)
 - **utils/**: 재사용 가능한 유틸리티 함수
 - **e2e/**: End-to-End 테스트 (Playwright)
 - **scripts/**: Node.js 유틸리티 스크립트 (Jira 통합 등)

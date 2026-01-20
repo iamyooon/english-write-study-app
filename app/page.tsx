@@ -1,7 +1,11 @@
 /**
  * 홈 페이지
+<<<<<<< HEAD
  * 게스트 모드 진입점
  * 세션이 있고 placement_level이 있으면 Writing 페이지로 리다이렉트
+=======
+ * 게스트 모드 진입점 + 에너지 게이지 표시
+>>>>>>> 6cf2d3d8edfeade01ec6a757affe877db37c46c1
  */
 
 'use client'
@@ -9,6 +13,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/client'
 
 export default function HomePage() {
@@ -40,9 +45,25 @@ export default function HomePage() {
     checkSession()
   }, [router])
 
+=======
+import { getProfile } from '@/lib/supabase/server'
+import EnergyGauge from '@/components/EnergyGauge'
+
+export default async function HomePage() {
+  const profile = await getProfile()
+  const currentEnergy = profile?.energy || 100
+
+>>>>>>> 6cf2d3d8edfeade01ec6a757affe877db37c46c1
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        {/* 에너지 게이지 (로그인된 경우) */}
+        {profile && (
+          <div className="flex justify-center pb-4 border-b border-gray-200">
+            <EnergyGauge currentEnergy={currentEnergy} size="md" showCountdown={true} />
+          </div>
+        )}
+
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             영어 Writing 놀이터

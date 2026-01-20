@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SentenceWritingPage from './SentenceWritingPage';
 import { SentenceService } from '../services/SentenceService';
@@ -245,11 +245,14 @@ describe('SentenceWritingPage', () => {
       render(<SentenceWritingPage />);
       
       const evaluateButton = screen.getByRole('button', { name: /AI 평가/i });
-      await user.click(evaluateButton);
+      await act(async () => {
+        await user.click(evaluateButton);
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByRole('alert')).toHaveTextContent('먼저 한글 문장을 생성해주세요');
+        const alert = screen.getByRole('alert');
+        expect(alert).toBeInTheDocument();
+        expect(alert).toHaveTextContent('먼저 한글 문장을 생성해주세요');
       }, { timeout: 3000 });
       expect(mockEvaluateEnglishSentence).not.toHaveBeenCalled();
     });
@@ -272,11 +275,14 @@ describe('SentenceWritingPage', () => {
       });
 
       const evaluateButton = screen.getByRole('button', { name: /AI 평가/i });
-      await user.click(evaluateButton);
+      await act(async () => {
+        await user.click(evaluateButton);
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByRole('alert')).toHaveTextContent('영어 문장을 입력해주세요');
+        const alert = screen.getByRole('alert');
+        expect(alert).toBeInTheDocument();
+        expect(alert).toHaveTextContent('영어 문장을 입력해주세요');
       }, { timeout: 3000 });
       expect(mockEvaluateEnglishSentence).not.toHaveBeenCalled();
     });

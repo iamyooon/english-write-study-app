@@ -1,0 +1,49 @@
+feat: 에너지 시스템 구현 완료
+
+## 변경 사항
+- 에너지 시스템 데이터베이스 마이그레이션 추가 (004_add_energy_system.sql)
+  - profiles.energy 기본값을 100으로 변경
+  - profiles.energy_last_charged 컬럼 추가
+  - study_logs.energy_gained 컬럼 추가
+- 에너지 관련 유틸리티 함수 구현 (lib/supabase/utils.ts)
+  - consumeEnergy: 학습 제출 시 에너지 소비 (100)
+  - produceEnergy: 문장 작성 시 에너지 획득 (+10 per sentence, 최대 100)
+  - chargeEnergyDaily: 매일 자정 에너지 충전
+  - getUsersNeedingEnergyCharge: 충전이 필요한 사용자 조회
+- 에너지 충전 API 엔드포인트 추가 (app/api/energy/charge-daily/route.ts)
+- 학습 제출 API에 에너지 시스템 통합 (app/api/study/submit/route.ts)
+  - 에너지 부족 시 403 에러 반환
+  - 성공한 문장 작성 시 에너지 획득
+- 메인 페이지에 에너지 UI 컴포넌트 추가 (app/page.tsx, components/EnergyGauge.tsx, EnergyCountdown.tsx)
+- 게스트 인증 시 에너지 초기값 설정 (app/api/auth/guest/route.ts)
+  - energy: 100, energy_last_charged 설정
+  - RLS 정책 오류 처리 개선
+- 에너지 시스템 관련 테스트 코드 추가
+  - lib/supabase/utils.test.ts: 에너지 유틸리티 함수 테스트 (6개)
+  - app/api/auth/guest/route.test.ts: 게스트 인증 에너지 초기화 테스트 (10개)
+  - app/api/study/submit/route.test.ts: 학습 제출 에너지 관련 테스트 (7개)
+- 문서 업데이트
+  - ARCHITECTURE_GUIDE.md: 에너지 시스템 키 컨셉 섹션 추가
+  - docs/IMPLEMENTATION_GAPS.md: 에너지 시스템 구현 완료로 상태 변경
+  - Supabase 연결 오류 검사 개선 (lib/supabase/middleware.ts)
+
+## 테스트 결과
+- Test Files: 3 passed (3) - 에너지 시스템 관련 테스트
+- Tests: 23 passed (23) - 에너지 시스템 관련 테스트
+- 실행 명령어: npx vitest run app/api/auth/guest/route.test.ts app/api/study/submit/route.test.ts lib/supabase/utils.test.ts
+
+## 수정된 파일
+- supabase/migrations/004_add_energy_system.sql (신규)
+- lib/supabase/utils.ts
+- lib/supabase/utils.test.ts (신규)
+- app/api/energy/charge-daily/route.ts (신규)
+- app/api/study/submit/route.ts
+- app/api/study/submit/route.test.ts (신규)
+- app/api/auth/guest/route.ts
+- app/api/auth/guest/route.test.ts (신규)
+- app/page.tsx
+- components/EnergyGauge.tsx (신규)
+- components/EnergyCountdown.tsx (신규)
+- lib/supabase/middleware.ts
+- ARCHITECTURE_GUIDE.md
+- docs/IMPLEMENTATION_GAPS.md
