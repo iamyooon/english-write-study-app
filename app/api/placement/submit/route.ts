@@ -21,32 +21,40 @@ const placementSubmitSchema = z.object({
     })
   ).min(5).max(7),
   gradeLevel: z.enum(['elementary_low', 'elementary_high']).optional(),
+  noAccount: z.boolean().optional().default(false), // 계정 없이 진행하는지
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { answers, gradeLevel } = placementSubmitSchema.parse(body)
+    const { answers, gradeLevel, noAccount } = placementSubmitSchema.parse(body)
 
-    // 사용자 인증 확인
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    let user: any = null
+    let supabase: any = null
 
-    if (!user) {
-      return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
-    }
+    // 계정이 있는 경우: 인증 확인
+    if (!noAccount) {
+      supabase = await createClient()
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser()
 
-    // 프로필 확인
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+      if (!authUser) {
+        return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+      }
 
-    if (!profile) {
-      return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+      user = authUser
+
+      // 프로필 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile) {
+        return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+      }
     }
 
     // 3중 필터링: 2단계 - OpenAI Moderation (모든 답변 검사)
@@ -129,21 +137,23 @@ placement_level 결정 기준:
     const evaluation = JSON.parse(evaluationText)
     const placementLevel = Math.max(1, Math.min(10, evaluation.placement_level || 1))
 
-    // 프로필에 placement_level 저장
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        placement_level: placementLevel,
-        level: placementLevel, // 기본 레벨도 placement_level로 설정
-      })
-      .eq('id', user.id)
+    // 계정이 있는 경우에만 프로필에 저장
+    if (!noAccount && user && supabase) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          placement_level: placementLevel,
+          level: placementLevel, // 기본 레벨도 placement_level로 설정
+        })
+        .eq('id', user.id)
 
-    if (updateError) {
-      console.error('프로필 업데이트 실패:', updateError)
-      return NextResponse.json(
-        { error: '결과 저장에 실패했습니다.' },
-        { status: 500 }
-      )
+      if (updateError) {
+        console.error('프로필 업데이트 실패:', updateError)
+        return NextResponse.json(
+          { error: '결과 저장에 실패했습니다.' },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({

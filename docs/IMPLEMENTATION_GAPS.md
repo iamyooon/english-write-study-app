@@ -67,6 +67,11 @@
 - ✅ 홈 화면에 에너지 게이지 통합
 - ✅ 테스트 코드 작성 및 통과 (`lib/supabase/utils.test.ts` - 6개 테스트 통과)
 
+**미구현:**
+- ❌ Vercel Cron Job 설정 (`vercel.json`에 자정 자동 충전 스케줄 추가 필요)
+  - 매일 자정(UTC)에 `/api/energy/charge-daily` 자동 호출
+  - `vercel.json`에 `crons` 설정 추가 필요
+
 ---
 
 #### 2. 기본 미션 흐름 완성 (✅ 구현 완료)

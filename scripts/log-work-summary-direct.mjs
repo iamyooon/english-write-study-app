@@ -6,18 +6,21 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 function loadEnv() {
-  try {
-    const env = readFileSync(join(process.cwd(), '.env'), 'utf-8');
-    for (const line of env.split('\n')) {
-      const [key, ...vals] = line.split('=');
-      if (key && vals.length) {
-        const val = vals.join('=').trim();
-        if (!process.env[key.trim()]) {
-          process.env[key.trim()] = val;
+  const envFiles = ['.env.local', '.env'];
+  for (const file of envFiles) {
+    try {
+      const env = readFileSync(join(process.cwd(), file), 'utf-8');
+      for (const line of env.split('\n')) {
+        const [key, ...vals] = line.split('=');
+        if (key && vals.length) {
+          const val = vals.join('=').trim();
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = val;
+          }
         }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+  }
 }
 
 loadEnv();
@@ -166,38 +169,46 @@ async function addComment(issueKey, content) {
 const summary = `## 작업 완료 요약
 
 ### 완료된 작업
-- .cursorrules 파일에 Jira 자동 로깅 규칙 추가
-- 작업 완료 시 자동으로 Jira 코멘트를 남기는 규칙 설정
-- 작업 요약 전용 스크립트 생성 (log-work-summary.mjs)
-- Jira 코멘트 삭제 스크립트 생성 (delete-jira-comment.mjs)
-- 한글 인코딩 문제 해결 (UTF-8 BOM 제거)
+- 에너지 시스템 구현 완료
+- Placement Test 재방문 로직 개선
 
 ### 주요 변경사항
-- .cursorrules 파일에 'Jira 자동 로깅 규칙' 섹션 추가
-  - 기본 이슈 키: WEB-295 (개발 태스크)
-  - 작업 요약 형식 가이드 포함
-  - 자동 실행 규칙 명시
-- log-work-summary.mjs 스크립트 생성
-  - 마크다운 형식의 작업 요약을 Jira Document Format으로 변환
-  - UTF-8 BOM 자동 제거 기능 추가
-  - 헤딩, 리스트, 볼드 텍스트 지원
-- delete-jira-comment.mjs 스크립트 생성
-  - 최근 코멘트 자동 삭제 기능
-  - 코멘트 ID 및 내용 확인 기능
+
+#### 에너지 시스템
+- 문장 생성 API에 에너지 체크 및 소모 로직 추가
+  - 문장 생성 시 1 에너지 소모
+  - 에너지 부족 시 에러 반환
+  - 데이터베이스에 에너지 업데이트
+- Writing 페이지에 에너지 UI 추가
+  - 페이지 상단에 에너지 표시 (현재/최대: 5)
+  - 에너지 바 시각화
+  - 에너지 부족 시 버튼 비활성화
+  - 프로필에서 에너지 정보 로드 및 실시간 업데이트
+
+#### Placement Test 재방문 로직
+- 루트 페이지에서 이미 placement_level이 있으면 Writing으로 자동 리다이렉트
+- 온보딩 페이지에서도 placement_level 확인 후 리다이렉트
+- Placement 페이지에서 중복 테스트 방지
+- 사용자 경험 개선: 한 번 테스트 완료 후 재방문 시 바로 학습 시작 가능
 
 ### 생성/수정된 파일
-- .cursorrules (Jira 자동 로깅 규칙 추가)
-- scripts/log-work-summary.mjs (작업 요약 전용 스크립트)
-- scripts/delete-jira-comment.mjs (코멘트 삭제 스크립트)
-- scripts/test-jira-encoding.mjs (인코딩 테스트 스크립트)
+- app/api/study/generate-mission/route.ts (에너지 체크 및 소모 로직 추가)
+- app/writing/page.tsx (에너지 UI 추가)
+- app/page.tsx (Placement Test 재방문 로직)
+- app/onboarding/page.tsx (Placement Test 재방문 로직)
+- app/placement/page.tsx (중복 테스트 방지)
 
-### 해결된 문제
-- 한글 인코딩 문제 해결 (UTF-8 BOM 제거)
-- Jira Document Format 변환 로직 개선
-- 리스트 아이템 연속 처리 개선`;
+### 데이터베이스
+- 에너지는 profiles 테이블의 energy 필드에 저장 (기본값: 5)
+- 문장 생성 시 1씩 감소
+
+### 다음 단계 (미구현)
+- 에너지 충전 기능 (시간 경과, 보석 사용 등)
+- 일일 에너지 리셋
+- 에너지 히스토리 관리`;
 
 // 명령줄 인자 처리
-let issueKey = 'WEB-295';
+let issueKey = process.env.DEFAULT_ISSUE_KEY || 'WEB-295';
 
 for (let i = 2; i < process.argv.length; i++) {
   if (process.argv[i] === '--issue' || process.argv[i] === '-i') {

@@ -240,24 +240,16 @@ describe('SentenceWritingPage', () => {
   });
 
   describe('평가 기능', () => {
-    it('한글 문장이 없으면 평가 버튼 클릭 시 에러 메시지가 표시된다', async () => {
-      const user = userEvent.setup();
+    it('한글 문장이 없으면 평가 버튼이 비활성화되어 있다', async () => {
       render(<SentenceWritingPage />);
       
       const evaluateButton = screen.getByRole('button', { name: /AI 평가/i });
-      await act(async () => {
-        await user.click(evaluateButton);
-      });
-
-      await waitFor(() => {
-        const alert = screen.getByRole('alert');
-        expect(alert).toBeInTheDocument();
-        expect(alert).toHaveTextContent('먼저 한글 문장을 생성해주세요');
-      }, { timeout: 3000 });
+      // 한글 문장이 없으면 버튼이 비활성화되어 있어야 함
+      expect(evaluateButton).toBeDisabled();
       expect(mockEvaluateEnglishSentence).not.toHaveBeenCalled();
     });
 
-    it('영어 문장이 없으면 평가 버튼 클릭 시 에러 메시지가 표시된다', async () => {
+    it('영어 문장이 없으면 평가 버튼이 비활성화되어 있다', async () => {
       const user = userEvent.setup();
       const mockResult = {
         koreanSentence: '나는 사과를 좋아해요',
@@ -275,15 +267,8 @@ describe('SentenceWritingPage', () => {
       });
 
       const evaluateButton = screen.getByRole('button', { name: /AI 평가/i });
-      await act(async () => {
-        await user.click(evaluateButton);
-      });
-
-      await waitFor(() => {
-        const alert = screen.getByRole('alert');
-        expect(alert).toBeInTheDocument();
-        expect(alert).toHaveTextContent('영어 문장을 입력해주세요');
-      }, { timeout: 3000 });
+      // 영어 문장이 없으면 버튼이 비활성화되어 있어야 함
+      expect(evaluateButton).toBeDisabled();
       expect(mockEvaluateEnglishSentence).not.toHaveBeenCalled();
     });
 

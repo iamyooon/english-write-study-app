@@ -12,12 +12,13 @@ import { z } from 'zod'
 
 const guestRequestSchema = z.object({
   gradeLevel: z.enum(['elementary_low', 'elementary_high']).optional(),
+  placementLevel: z.number().min(1).max(10).optional(), // 레벨테스트 결과
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { gradeLevel } = guestRequestSchema.parse(body)
+    const { gradeLevel, placementLevel } = guestRequestSchema.parse(body)
 
     // 환경 변수 확인
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -69,32 +70,77 @@ export async function POST(request: Request) {
 
     const userId = authData.user.id
 
+    // 기존 프로필 확인 (에너지 유지를 위해)
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
     // 프로필 생성 또는 업데이트
     // 참고: 실제 스키마에 맞춰 grade 필드 사용 (grade_level 아님)
     const profileData: any = {
       id: userId,
-      level: 1,
-      energy: 100, // 에너지 시스템: 기본값 100
-      gems: 0,
-      is_premium: false,
-      vision_usage_today: 0,
-      feedback_usage_today: 0,
-      energy_last_charged: new Date().toISOString(), // 에너지 시스템: 충전 시점 기록
+      level: existingProfile?.level ?? (placementLevel ?? 1),
+      // 기존 프로필이 있으면 에너지 유지, 없으면 스키마 기본값(5) 사용
+      energy: existingProfile?.energy ?? undefined, // undefined면 DB 기본값 사용
+      gems: existingProfile?.gems ?? 0,
+      is_premium: existingProfile?.is_premium ?? false,
+      vision_usage_today: existingProfile?.vision_usage_today ?? 0,
+      feedback_usage_today: existingProfile?.feedback_usage_today ?? 0,
+    }
+
+    // 레벨테스트 결과가 있으면 placement_level 설정
+    if (placementLevel) {
+      profileData.placement_level = placementLevel
+      profileData.level = placementLevel
     }
 
     if (gradeLevel) {
       // grade 필드에 학년 저장 (1-3: 저학년, 4-6: 고학년)
-      profileData.grade = gradeLevel === 'elementary_low' ? 1 : 4
-      // publisher는 나중에 설정 가능
+      // 기존 프로필이 있으면 grade는 업데이트하지 않음
+      if (!existingProfile) {
+        profileData.grade = gradeLevel === 'elementary_low' ? 1 : 4
+      }
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .upsert(profileData, {
-        onConflict: 'id',
-      })
-      .select()
-      .single()
+    // 기존 프로필이 있으면 선택적 업데이트, 없으면 생성
+    let profile
+    let profileError
+
+    if (existingProfile) {
+      // 기존 프로필이 있으면 필요한 필드만 업데이트 (에너지는 유지)
+      const updateData: any = {}
+      if (gradeLevel) {
+        updateData.grade = gradeLevel === 'elementary_low' ? 1 : 4
+      }
+      if (placementLevel) {
+        updateData.placement_level = placementLevel
+        updateData.level = placementLevel
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', userId)
+          .select()
+          .single()
+        profile = data
+        profileError = error
+      } else {
+        profile = existingProfile
+      }
+    } else {
+      // 새 프로필 생성 (에너지는 스키마 기본값 5 사용)
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single()
+      profile = data
+      profileError = error
+    }
 
     if (profileError) {
       console.error('프로필 생성 실패:', profileError)

@@ -37,6 +37,18 @@ export default function PlacementTestPage() {
   // 세션 확인 및 학년 정보 가져오기
   useEffect(() => {
     const checkSession = async () => {
+      // URL 파라미터에서 계정 없이 진행하는지 확인
+      const urlParams = new URLSearchParams(window.location.search)
+      const noAccount = urlParams.get('noAccount') === 'true'
+      const gradeLevelParam = urlParams.get('gradeLevel') as 'elementary_low' | 'elementary_high' | null
+
+      if (noAccount && gradeLevelParam) {
+        // 계정 없이 진행: 학년 정보만 설정
+        setGradeLevel(gradeLevelParam)
+        return
+      }
+
+      // 계정이 있는 경우
       const supabase = createClient()
       const {
         data: { session },
@@ -140,6 +152,10 @@ export default function PlacementTestPage() {
   const handleSubmit = async (finalAnswers: Answer[]) => {
     setIsSubmitting(true)
     try {
+      // 계정 없이 진행하는지 확인
+      const urlParams = new URLSearchParams(window.location.search)
+      const noAccount = urlParams.get('noAccount') === 'true'
+
       const response = await fetch('/api/placement/submit', {
         method: 'POST',
         headers: {
@@ -148,6 +164,7 @@ export default function PlacementTestPage() {
         body: JSON.stringify({
           answers: finalAnswers,
           gradeLevel,
+          noAccount, // 계정 없이 진행하는지 플래그 전달
         }),
       })
 
@@ -158,14 +175,31 @@ export default function PlacementTestPage() {
 
       const data = await response.json()
 
-      toast.success('테스트가 완료되었습니다!', {
-        duration: 3000,
-      })
+      if (noAccount) {
+        // 계정 없이 진행: 결과를 세션 스토리지에 저장하고 계정 생성 유도
+        sessionStorage.setItem('placement_result', JSON.stringify({
+          placement_level: data.placement_level,
+          gradeLevel,
+        }))
+        
+        toast.success(`레벨테스트 완료! 추천 레벨: ${data.placement_level}`, {
+          duration: 5000,
+        })
 
-      // 결과를 보여주고 Writing 페이지로 이동
-      setTimeout(() => {
-        router.push(`/writing?placement_level=${data.placement_level}`)
-      }, 2000)
+        // 계정 생성 페이지로 이동
+        setTimeout(() => {
+          router.push(`/onboarding?placement_level=${data.placement_level}&createAccount=true`)
+        }, 2000)
+      } else {
+        // 계정 있음: Writing 페이지로 이동
+        toast.success('테스트가 완료되었습니다!', {
+          duration: 3000,
+        })
+
+        setTimeout(() => {
+          router.push(`/writing?placement_level=${data.placement_level}`)
+        }, 2000)
+      }
     } catch (error: any) {
       console.error('제출 오류:', error)
       toast.error(error.message || '제출 중 오류가 발생했습니다.')

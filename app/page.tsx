@@ -1,89 +1,113 @@
 /**
  * 홈 페이지
-<<<<<<< HEAD
- * 게스트 모드 진입점
- * 세션이 있고 placement_level이 있으면 Writing 페이지로 리다이렉트
-=======
- * 게스트 모드 진입점 + 에너지 게이지 표시
->>>>>>> 6cf2d3d8edfeade01ec6a757affe877db37c46c1
+ * 로그인 상태 확인 후 로그인/회원가입 선택
  */
 
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/client'
 
 export default function HomePage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
+  // 로그인 상태 확인
   useEffect(() => {
+    let isMounted = true
+    
     const checkSession = async () => {
-      const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      try {
+        const supabase = createClient()
+        
+        // 세션 확인 (타임아웃 제거 - 완료될 때까지 기다림)
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        console.log('홈페이지 세션 확인:', { 
+          hasSession: !!session, 
+          userId: session?.user?.id,
+          error 
+        })
 
-      if (session) {
-        // 프로필에서 placement_level 확인
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('placement_level')
-          .eq('id', session.user.id)
-          .single()
+        if (!isMounted) return
 
-        // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
-        if (profile?.placement_level) {
-          router.push('/writing')
+        if (session && !error) {
+          // 로그인되어 있으면 writing 페이지로 리다이렉트
+          console.log('로그인 상태 확인됨, writing으로 리다이렉트')
+          setIsLoading(false) // 리다이렉트 전에 로딩 상태 해제
+          router.replace('/writing')
           return
+        }
+        
+        setIsLoggedIn(false)
+        setIsLoading(false) // 로그인하지 않은 경우에도 로딩 상태 해제
+      } catch (error) {
+        console.error('세션 확인 오류:', error)
+        if (isMounted) {
+          setIsLoggedIn(false)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
         }
       }
     }
 
     checkSession()
+
+    return () => {
+      isMounted = false
+    }
   }, [router])
 
-=======
-import { getProfile } from '@/lib/supabase/server'
-import EnergyGauge from '@/components/EnergyGauge'
+  if (isLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </main>
+    )
+  }
 
-export default async function HomePage() {
-  const profile = await getProfile()
-  const currentEnergy = profile?.energy || 100
+  // 로그인하지 않은 경우에만 로그인/회원가입 화면 표시
+  if (isLoggedIn) {
+    return null // 리다이렉트 중이므로 아무것도 표시하지 않음
+  }
 
->>>>>>> 6cf2d3d8edfeade01ec6a757affe877db37c46c1
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
-        {/* 에너지 게이지 (로그인된 경우) */}
-        {profile && (
-          <div className="flex justify-center pb-4 border-b border-gray-200">
-            <EnergyGauge currentEnergy={currentEnergy} size="md" showCountdown={true} />
-          </div>
-        )}
-
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            영어 Writing 놀이터
+            We Word Planet
           </h1>
           <p className="text-gray-600">
-            아이 혼자 쓰고 AI가 코치해주는
+            아이 혼자 쓰고 AI가 코치해주는 영어 Writing 놀이터
           </p>
         </div>
 
-        <div className="space-y-4">
+        {/* 로그인/회원가입 선택 */}
+        <div className="space-y-3">
           <Link
-            href="/onboarding"
-            className="block w-full px-6 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all shadow-lg hover:shadow-xl text-center"
+            href="/login"
+            className="block w-full px-6 py-4 rounded-lg font-medium transition-all bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 text-center"
           >
-            시작하기
+            <div className="text-lg font-semibold">로그인</div>
+            <div className="text-sm mt-1">기존 계정으로 로그인</div>
           </Link>
 
-          <div className="text-center text-sm text-gray-500">
-            게스트 모드로 시작할 수 있습니다
-          </div>
+          <Link
+            href="/signup"
+            className="block w-full px-6 py-4 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 text-center"
+          >
+            <div className="text-lg font-semibold">회원가입</div>
+            <div className="text-sm mt-1">새 계정 만들기</div>
+          </Link>
         </div>
 
         <div className="pt-6 border-t border-gray-200">

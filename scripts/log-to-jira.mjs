@@ -2,20 +2,23 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-// .env 파일 로드
+// .env.local과 .env 파일 로드 (.env.local이 우선순위 높음)
 function loadEnv() {
-  try {
-    const env = readFileSync(join(process.cwd(), '.env'), 'utf-8');
-    for (const line of env.split('\n')) {
-      const [key, ...vals] = line.split('=');
-      if (key && vals.length) {
-        const val = vals.join('=').trim();
-        if (!process.env[key.trim()]) {
-          process.env[key.trim()] = val;
+  const envFiles = ['.env.local', '.env'];
+  for (const file of envFiles) {
+    try {
+      const env = readFileSync(join(process.cwd(), file), 'utf-8');
+      for (const line of env.split('\n')) {
+        const [key, ...vals] = line.split('=');
+        if (key && vals.length) {
+          const val = vals.join('=').trim();
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = val;
+          }
         }
       }
-    }
-  } catch (e) {}
+    } catch (e) {}
+  }
 }
 
 loadEnv();
@@ -23,7 +26,7 @@ loadEnv();
 const JIRA_URL = process.env.JIRA_URL;
 const JIRA_EMAIL = process.env.JIRA_EMAIL;
 const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
-const ISSUE_KEY = process.env.DEFAULT_ISSUE_KEY || 'WEB-294';
+const ISSUE_KEY = process.env.DEFAULT_ISSUE_KEY || process.env.JIRA_PROJECT_KEY || 'WEB-295';
 
 let userRequest = process.argv[2] || '';
 let aiResponse = process.argv.slice(3).join(' ') || '';

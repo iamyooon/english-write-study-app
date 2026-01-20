@@ -12,8 +12,6 @@ import toast from 'react-hot-toast'
 
 interface Mission {
   korean: string
-  vocabulary?: string[]
-  example?: string
   gradeLevel: 'elementary_low' | 'elementary_high'
   level: number
 }
@@ -79,7 +77,7 @@ export default function WritingPage() {
           .from('profiles')
           .select('placement_level, grade')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
 
         if (profile) {
           if (profile.placement_level) {
@@ -130,6 +128,8 @@ export default function WritingPage() {
       // 에너지 업데이트
       if (data.energy) {
         setEnergy(data.energy.current)
+        // 헤더에 에너지 업데이트 알림
+        window.dispatchEvent(new Event('energyUpdated'))
         toast.success(`새 문장이 생성되었습니다! (에너지 ${data.energy.current}/5)`, {
           icon: '⚡',
         })
@@ -213,28 +213,10 @@ export default function WritingPage() {
   return (
     <main className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">
             영어 문장 쓰기
           </h1>
-          
-          {/* 에너지 표시 */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg px-4 py-2">
-            <span className="text-2xl">⚡</span>
-            <div className="flex flex-col">
-              <div className="text-xs text-gray-600">에너지</div>
-              <div className="text-lg font-bold text-orange-600">
-                {energy}/5
-              </div>
-            </div>
-            {/* 에너지 바 */}
-            <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-300"
-                style={{ width: `${(energy / 5) * 100}%` }}
-              ></div>
-            </div>
-          </div>
         </div>
 
         {/* Placement Test 결과 기반 레벨 추천 */}
@@ -338,42 +320,6 @@ export default function WritingPage() {
             )}
           </div>
         </div>
-
-        {/* 어휘 노출 */}
-        {mission && mission.vocabulary && mission.vocabulary.length > 0 && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              📚 도움이 될 단어들
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {mission.vocabulary.map((word, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-300"
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 예시 문장 */}
-        {mission && mission.example && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              💡 예시 문장
-            </label>
-            <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
-              <p className="text-lg font-medium text-purple-800 italic">
-                {mission.example}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                참고만 하세요! 자신만의 문장을 만들어보세요.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* 영어 입력 */}
         <div className="space-y-2">
