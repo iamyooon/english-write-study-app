@@ -87,17 +87,32 @@ export async function produceEnergy(userId: string, amount: number = 10) {
 }
 
 /**
- * 자정 에너지 자동 충전 (매일 100으로 충전)
+ * 자정 에너지 자동 충전 (매일 5 충전)
  * @param userId 사용자 ID
+ * @param amount 충전할 에너지 양 (기본값: 5)
  * @returns 업데이트된 프로필
  */
-export async function chargeEnergyDaily(userId: string) {
+export async function chargeEnergyDaily(userId: string, amount: number = 5) {
   const supabase = await createClient()
+  
+  // 현재 에너지 조회
+  const { data: profile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('energy')
+    .eq('id', userId)
+    .single()
+
+  if (fetchError || !profile) {
+    throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
+  }
+
+  // 에너지 증가 (최대 100)
+  const newEnergy = Math.min(profile.energy + amount, 100)
   
   const { data, error } = await supabase
     .from('profiles')
     .update({ 
-      energy: 100,
+      energy: newEnergy,
       energy_last_charged: new Date().toISOString()
     })
     .eq('id', userId)

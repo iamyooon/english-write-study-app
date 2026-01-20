@@ -3,8 +3,10 @@
  * 
  * GET /api/energy/charge-daily
  * 
- * 자정 이후에 실행하여 에너지가 부족한 사용자들의 에너지를 100으로 충전합니다.
- * Supabase Edge Function 또는 Cron Job에서 주기적으로 호출합니다.
+ * 자정 이후에 실행하여 에너지가 부족한 사용자들의 에너지를 매일 5씩 충전합니다.
+ * Vercel Cron Job에서 매일 자정(UTC)에 자동으로 호출됩니다.
+ * 
+ * Cron 설정: vercel.json의 crons 설정 참조
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -13,14 +15,20 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
-    // 인증 확인 (서비스 계정 또는 관리자만 접근 가능하도록)
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    // TODO: 실제 운영 환경에서는 서비스 계정 또는 특정 관리자만 접근 가능하도록 검증 필요
-    // 현재는 개발 환경에서 동작하도록 기본 인증만 확인
+    // Vercel Cron Job 인증 확인
+    // Vercel Cron Job은 자동으로 authorization 헤더를 추가합니다
+    const authHeader = request.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    
+    // CRON_SECRET이 설정되어 있으면 검증, 없으면 Vercel Cron Job 자체 인증 사용
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    console.log('[에너지 충전] Cron Job 실행 시작:', new Date().toISOString())
 
     // 충전이 필요한 사용자 찾기
     const userIds = await getUsersNeedingEnergyCharge()

@@ -158,9 +158,49 @@ describe('Energy System Utils', () => {
   })
 
   describe('chargeEnergyDaily', () => {
-    it('should charge energy to 100', async () => {
+    it('should charge energy by 5 (additive, capped at 100)', async () => {
       const mockSupabase = {
         from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { energy: 50 },
+                error: null,
+              }),
+            })),
+          })),
+          update: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { energy: 55, energy_last_charged: new Date().toISOString() },
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      }
+
+      const { createClient } = await import('./server')
+      vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+
+      const result = await chargeEnergyDaily('user-123', 5)
+      expect(result.energy).toBe(55)
+      expect(result.energy_last_charged).toBeDefined()
+    })
+
+    it('should not exceed max energy of 100', async () => {
+      const mockSupabase = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { energy: 98 },
+                error: null,
+              }),
+            })),
+          })),
           update: vi.fn(() => ({
             eq: vi.fn(() => ({
               select: vi.fn(() => ({
@@ -177,7 +217,7 @@ describe('Energy System Utils', () => {
       const { createClient } = await import('./server')
       vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
 
-      const result = await chargeEnergyDaily('user-123')
+      const result = await chargeEnergyDaily('user-123', 5)
       expect(result.energy).toBe(100)
       expect(result.energy_last_charged).toBeDefined()
     })
