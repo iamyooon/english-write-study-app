@@ -204,6 +204,62 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     - 실행 명령어: `npm test` 또는 `npx vitest run`
   - **테스트 결과가 없는 커밋은 절대 생성하지 않음**
 
+- **커밋 메시지 한글 인코딩 문제 해결 (필수)**:
+  - **문제**: PowerShell에서 `git commit -m "한글 메시지"`를 사용하면 한글이 깨질 수 있음
+  - **해결 방법**: 커밋 메시지를 UTF-8 파일로 작성하여 사용
+  - **절차**:
+    1. 커밋 메시지를 UTF-8로 인코딩된 파일로 작성 (예: `commit-message.txt`)
+    2. `git commit -F commit-message.txt` 명령어 사용
+    3. 커밋 완료 후 임시 파일 삭제
+  - **파일 작성 예시**:
+    ```powershell
+    # PowerShell에서 UTF-8 파일 생성
+    $message = @"
+    feat: [기능 설명]
+    
+    ## 변경 사항
+    - [변경사항 1]
+    - [변경사항 2]
+    
+    ## 테스트 결과 (필수)
+    ✅ 테스트 실행 완료
+    - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
+    - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
+    - 실행 명령어: `npm test`
+    - 실패한 테스트: 없음 (또는 [실패한 테스트 목록])
+    
+    ## 수정된 파일
+    - [파일 경로 1]
+    - [파일 경로 2]
+    "@
+    [System.IO.File]::WriteAllText("commit-message.txt", $message, [System.Text.Encoding]::UTF8)
+    git commit -F commit-message.txt
+    Remove-Item commit-message.txt
+    ```
+  - **또는 Node.js 스크립트 사용**:
+    ```javascript
+    const fs = require('fs');
+    const message = `feat: [기능 설명]
+    
+    ## 변경 사항
+    - [변경사항 1]
+    - [변경사항 2]
+    
+    ## 테스트 결과 (필수)
+    ✅ 테스트 실행 완료
+    - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
+    - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
+    - 실행 명령어: npm test
+    - 실패한 테스트: 없음 (또는 [실패한 테스트 목록])
+    
+    ## 수정된 파일
+    - [파일 경로 1]
+    - [파일 경로 2]
+    `;
+    fs.writeFileSync('commit-message.txt', message, 'utf-8');
+    ```
+    그 다음: `git commit -F commit-message.txt && Remove-Item commit-message.txt`
+
 - **커밋 메시지 형식 (필수)**:
   ```
   feat: [기능 설명]
@@ -252,8 +308,40 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
   - [ ] 테스트 결과 확인 (통과/실패 여부)
   - [ ] 실패한 테스트가 있으면 코드 수정 및 재실행
   - [ ] 모든 테스트 통과 확인
+  - [ ] 커밋 메시지 작성 (UTF-8 파일로 작성하여 한글 깨짐 방지)
   - [ ] 커밋 메시지에 테스트 결과 포함
-  - [ ] 커밋 생성
+  - [ ] `git commit -F commit-message.txt` 명령어로 커밋 생성
+  - [ ] 커밋 완료 후 `commit-message.txt` 파일 삭제
+
+- **커밋 메시지 파일 생성 방법**:
+  - **방법 1**: PowerShell 스크립트 사용
+    ```powershell
+    $message = @"
+    feat: [기능 설명]
+    
+    ## 변경 사항
+    - [변경사항 1]
+    "@
+    [System.IO.File]::WriteAllText("commit-message.txt", $message, [System.Text.UTF8Encoding]::new($false))
+    git commit -F commit-message.txt
+    Remove-Item commit-message.txt
+    ```
+  - **방법 2**: Node.js 스크립트 사용
+    ```bash
+    node scripts/create-commit-message.mjs "feat: 기능 설명
+
+    ## 변경 사항
+    - 변경사항 1"
+    git commit -F commit-message.txt
+    Remove-Item commit-message.txt
+    ```
+  - **방법 3**: 직접 파일 작성
+    ```powershell
+    # Notepad나 다른 에디터로 commit-message.txt 파일을 UTF-8로 저장
+    # 그 다음:
+    git commit -F commit-message.txt
+    Remove-Item commit-message.txt
+    ```
 - **문서 업데이트 필수**: 기능 구현 후 커밋하기 전에 반드시 다음 문서들을 업데이트해야 합니다:
   - **ARCHITECTURE_GUIDE.md**: 구현된 기능의 아키텍처 변경사항 반영
     - 새로운 API 엔드포인트 추가 시 해당 섹션 업데이트
