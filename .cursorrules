@@ -206,11 +206,12 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
 
 - **커밋 메시지 한글 인코딩 문제 해결 (필수)**:
   - **문제**: PowerShell에서 `git commit -m "한글 메시지"`를 사용하면 한글이 깨질 수 있음
-  - **해결 방법**: 커밋 메시지를 UTF-8 파일로 작성하여 사용
+  - **해결 방법**: Node.js 스크립트 사용 (Jira 코멘트와 동일한 방식)
+  - **권장 방법**: `scripts/commit-with-message.mjs` 스크립트 사용
   - **절차**:
-    1. 커밋 메시지를 UTF-8로 인코딩된 파일로 작성 (예: `commit-message.txt`)
-    2. `git commit -F commit-message.txt` 명령어 사용
-    3. 커밋 완료 후 임시 파일 삭제
+    1. 커밋 메시지를 파일로 작성 (UTF-8, 예: `commit-message.txt`)
+    2. `node scripts/commit-with-message.mjs @commit-message.txt` 명령어 사용
+    3. 스크립트가 자동으로 파일을 읽어서 UTF-8로 처리하고 커밋 실행
   - **파일 작성 예시**:
     ```powershell
     # PowerShell에서 UTF-8 파일 생성 (BOM 없음)
@@ -317,7 +318,25 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
   - [ ] 커밋 완료 후 `commit-message.txt` 파일 삭제
 
 - **커밋 메시지 파일 생성 방법**:
-  - **방법 1**: PowerShell 스크립트 사용
+  - **방법 1: Node.js 스크립트 사용 (권장, Jira 코멘트와 동일한 방식)**:
+    ```bash
+    # 1. 커밋 메시지를 파일로 작성 (UTF-8)
+    # commit-message.txt 파일을 Notepad나 VS Code로 UTF-8로 저장
+    
+    # 2. 스크립트 실행 (파일에서 읽기)
+    node scripts/commit-with-message.mjs @commit-message.txt
+    
+    # 또는 직접 메시지 전달
+    node scripts/commit-with-message.mjs "feat: 기능 설명
+
+    ## 변경 사항
+    - 변경사항 1"
+    ```
+    - 스크립트가 자동으로 UTF-8로 파일을 읽고 커밋 실행
+    - 임시 파일 자동 삭제
+    - Jira 코멘트 스크립트와 동일한 방식으로 인코딩 처리
+
+  - **방법 2: PowerShell 스크립트 사용**:
     ```powershell
     $message = @"
     feat: [기능 설명]
@@ -327,25 +346,14 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     "@
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText("commit-message.txt", $message, $utf8NoBom)
-    git commit -F commit-message.txt
+    node scripts/commit-with-message.mjs @commit-message.txt
     Remove-Item commit-message.txt
     ```
-  - **방법 2**: Node.js 스크립트 사용
-    ```bash
-    node scripts/create-commit-message.mjs "feat: 기능 설명
 
-    ## 변경 사항
-    - 변경사항 1"
-    git commit -F commit-message.txt
-    Remove-Item commit-message.txt
-    ```
-  - **방법 3**: 직접 파일 작성
-    ```powershell
-    # Notepad나 다른 에디터로 commit-message.txt 파일을 UTF-8 (BOM 없음)로 저장
-    # 그 다음:
-    git commit -F commit-message.txt
-    Remove-Item commit-message.txt
-    ```
+  - **방법 3: VS Code 사용 (가장 안정적)**:
+    - VS Code의 Source Control 탭에서 커밋 메시지 직접 입력
+    - 한글이 정상적으로 저장됨
+
   - **중요**: Git 설정이 UTF-8로 되어 있어야 합니다:
     ```powershell
     git config --global i18n.commitencoding utf-8

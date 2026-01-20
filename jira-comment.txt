@@ -1,0 +1,30 @@
+## 작업 완료 요약
+
+### 완료된 작업
+- 커밋 메시지 한글 인코딩 문제 해결 (Jira 코멘트와 동일한 방식)
+- Node.js 스크립트로 커밋 메시지 파일 읽기 및 커밋 자동화
+- commit-with-message.mjs 스크립트 추가
+
+### 주요 변경사항
+- `scripts/commit-with-message.mjs` 추가 (Jira 코멘트 스크립트와 동일한 방식)
+- 파일에서 커밋 메시지를 읽어서 UTF-8로 처리
+- 커밋 실행 및 임시 파일 자동 삭제
+- `.cursorrules`에 권장 방법 업데이트
+
+### 생성/수정된 파일
+- scripts/commit-with-message.mjs (신규)
+- .cursorrules
+
+### 사용 방법
+```bash
+# 1. 커밋 메시지를 파일로 작성 (UTF-8)
+# commit-message.txt 파일을 Notepad나 VS Code로 UTF-8로 저장
+
+# 2. 스크립트 실행
+node scripts/commit-with-message.mjs @commit-message.txt
+```
+
+### 해결 방법
+- Jira 코멘트 스크립트와 동일한 방식으로 Node.js에서 파일 읽기
+- UTF-8로 명시적으로 파일 처리
+- PowerShell의 인코딩 문제를 우회하여 Node.js로 처리
