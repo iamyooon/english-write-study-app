@@ -213,7 +213,7 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     3. 커밋 완료 후 임시 파일 삭제
   - **파일 작성 예시**:
     ```powershell
-    # PowerShell에서 UTF-8 파일 생성
+    # PowerShell에서 UTF-8 파일 생성 (BOM 없음)
     $message = @"
     feat: [기능 설명]
     
@@ -232,7 +232,10 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     - [파일 경로 1]
     - [파일 경로 2]
     "@
-    [System.IO.File]::WriteAllText("commit-message.txt", $message, [System.Text.Encoding]::UTF8)
+    # UTF-8 BOM 없이 파일 작성
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText("commit-message.txt", $message, $utf8NoBom)
+    # Git 설정 확인 후 커밋
     git commit -F commit-message.txt
     Remove-Item commit-message.txt
     ```
@@ -322,7 +325,8 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     ## 변경 사항
     - [변경사항 1]
     "@
-    [System.IO.File]::WriteAllText("commit-message.txt", $message, [System.Text.UTF8Encoding]::new($false))
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText("commit-message.txt", $message, $utf8NoBom)
     git commit -F commit-message.txt
     Remove-Item commit-message.txt
     ```
@@ -337,10 +341,16 @@ You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router),
     ```
   - **방법 3**: 직접 파일 작성
     ```powershell
-    # Notepad나 다른 에디터로 commit-message.txt 파일을 UTF-8로 저장
+    # Notepad나 다른 에디터로 commit-message.txt 파일을 UTF-8 (BOM 없음)로 저장
     # 그 다음:
     git commit -F commit-message.txt
     Remove-Item commit-message.txt
+    ```
+  - **중요**: Git 설정이 UTF-8로 되어 있어야 합니다:
+    ```powershell
+    git config --global i18n.commitencoding utf-8
+    git config --global i18n.logoutputencoding utf-8
+    git config --global core.quotepath false
     ```
 - **문서 업데이트 필수**: 기능 구현 후 커밋하기 전에 반드시 다음 문서들을 업데이트해야 합니다:
   - **ARCHITECTURE_GUIDE.md**: 구현된 기능의 아키텍처 변경사항 반영
