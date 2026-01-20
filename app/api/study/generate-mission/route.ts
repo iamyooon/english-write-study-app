@@ -38,6 +38,26 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
+    if (!profile) {
+      return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+    }
+
+    // 에너지 체크 (문장 생성 시 1 에너지 소모)
+    const currentEnergy = profile.energy || 0
+    const energyCost = 1
+
+    if (currentEnergy < energyCost) {
+      return NextResponse.json(
+        {
+          error: '에너지가 부족합니다.',
+          details: `문장 생성을 위해 ${energyCost} 에너지가 필요합니다. (현재: ${currentEnergy})`,
+          currentEnergy,
+          requiredEnergy: energyCost,
+        },
+        { status: 400 }
+      )
+    }
+
     // 수준에 맞는 프롬프트 생성
     const levelDescription =
       gradeLevel === 'elementary_low'
@@ -86,12 +106,28 @@ export async function POST(request: Request) {
       throw new Error('생성된 문장을 찾을 수 없습니다.')
     }
 
+    // 에너지 소모
+    const newEnergy = Math.max(0, currentEnergy - energyCost)
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ energy: newEnergy })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('에너지 업데이트 실패:', updateError)
+      // 에너지 업데이트 실패해도 문장은 반환 (일관성 유지)
+    }
+
     return NextResponse.json({
       success: true,
       mission: {
         korean: koreanSentence,
         gradeLevel,
         level,
+      },
+      energy: {
+        current: newEnergy,
+        consumed: energyCost,
       },
     })
   } catch (error) {

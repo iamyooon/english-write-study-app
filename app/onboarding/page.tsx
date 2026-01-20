@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -14,6 +14,33 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [selectedGrade, setSelectedGrade] = useState<'elementary_low' | 'elementary_high' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  // 세션 확인 및 이미 placement_level이 있으면 Writing으로 리다이렉트
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = createClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session) {
+        // 프로필에서 placement_level 확인
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('placement_level')
+          .eq('id', session.user.id)
+          .single()
+
+        // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
+        if (profile?.placement_level) {
+          router.push('/writing')
+          return
+        }
+      }
+    }
+
+    checkSession()
+  }, [router])
 
   const handleContinue = async () => {
     if (!selectedGrade) return

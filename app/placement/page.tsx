@@ -47,12 +47,18 @@ export default function PlacementTestPage() {
         return
       }
 
-      // 프로필에서 학년 정보 가져오기
+      // 프로필에서 학년 정보 및 placement_level 가져오기
       const { data: profile } = await supabase
         .from('profiles')
-        .select('grade')
+        .select('grade, placement_level')
         .eq('id', session.user.id)
         .single()
+
+      // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
+      if (profile?.placement_level) {
+        router.push('/writing')
+        return
+      }
 
       if (profile?.grade) {
         setGradeLevel(profile.grade <= 3 ? 'elementary_low' : 'elementary_high')

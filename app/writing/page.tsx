@@ -40,6 +40,7 @@ export default function WritingPage() {
   const [placementLevel, setPlacementLevel] = useState<number | null>(null)
   const [recommendedLevel, setRecommendedLevel] = useState<number | null>(null)
   const [showRecommendation, setShowRecommendation] = useState(false)
+  const [energy, setEnergy] = useState<number>(5) // 기본값 5
 
   // 사용자 세션 확인 및 placement_level 가져오기
   useEffect(() => {
@@ -88,6 +89,11 @@ export default function WritingPage() {
           if (profile.grade) {
             setGradeLevel(profile.grade <= 3 ? 'elementary_low' : 'elementary_high')
           }
+
+          // 에너지 정보 가져오기
+          if (profile.energy !== undefined) {
+            setEnergy(profile.energy)
+          }
         }
       }
     }
@@ -118,10 +124,27 @@ export default function WritingPage() {
       setMission(data.mission)
       setUserInput('')
       setFeedback(null)
-      toast.success('새 문장이 생성되었습니다!')
+      
+      // 에너지 업데이트
+      if (data.energy) {
+        setEnergy(data.energy.current)
+        toast.success(`새 문장이 생성되었습니다! (에너지 ${data.energy.current}/5)`, {
+          icon: '⚡',
+        })
+      } else {
+        toast.success('새 문장이 생성되었습니다!')
+      }
     } catch (error: any) {
       console.error('문장 생성 오류:', error)
-      toast.error(error.message || '문장 생성 중 오류가 발생했습니다.')
+      
+      // 에너지 부족 에러 처리
+      if (error.message && error.message.includes('에너지가 부족합니다')) {
+        toast.error('⚡ 에너지가 부족합니다! 에너지를 충전해주세요.', {
+          duration: 5000,
+        })
+      } else {
+        toast.error(error.message || '문장 생성 중 오류가 발생했습니다.')
+      }
     } finally {
       setIsGenerating(false)
     }
@@ -188,9 +211,29 @@ export default function WritingPage() {
   return (
     <main className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
-        <h1 className="text-3xl font-bold text-gray-800 text-center">
-          영어 문장 쓰기
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-800">
+            영어 문장 쓰기
+          </h1>
+          
+          {/* 에너지 표시 */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg px-4 py-2">
+            <span className="text-2xl">⚡</span>
+            <div className="flex flex-col">
+              <div className="text-xs text-gray-600">에너지</div>
+              <div className="text-lg font-bold text-orange-600">
+                {energy}/5
+              </div>
+            </div>
+            {/* 에너지 바 */}
+            <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-300"
+                style={{ width: `${(energy / 5) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
 
         {/* Placement Test 결과 기반 레벨 추천 */}
         {showRecommendation && recommendedLevel && (
@@ -270,10 +313,17 @@ export default function WritingPage() {
             <label className="block text-sm font-medium text-gray-700">한글 문장</label>
             <button
               onClick={handleGenerateMission}
-              disabled={isGenerating}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              disabled={isGenerating || energy < 1}
+              className={`px-4 py-2 text-white text-sm rounded-lg transition-all ${
+                energy < 1
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : isGenerating
+                  ? 'bg-indigo-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+              title={energy < 1 ? '에너지가 부족합니다 (1 에너지 필요)' : ''}
             >
-              {isGenerating ? '생성 중...' : '새 문장 생성'}
+              {isGenerating ? '생성 중...' : energy < 1 ? '⚡ 에너지 부족' : '새 문장 생성 (⚡ 1)'}
             </button>
           </div>
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 min-h-[80px] flex items-center">

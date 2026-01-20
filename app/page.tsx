@@ -1,11 +1,45 @@
 /**
  * 홈 페이지
  * 게스트 모드 진입점
+ * 세션이 있고 placement_level이 있으면 Writing 페이지로 리다이렉트
  */
 
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 export default function HomePage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = createClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session) {
+        // 프로필에서 placement_level 확인
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('placement_level')
+          .eq('id', session.user.id)
+          .single()
+
+        // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
+        if (profile?.placement_level) {
+          router.push('/writing')
+          return
+        }
+      }
+    }
+
+    checkSession()
+  }, [router])
+
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
