@@ -67,7 +67,9 @@ export default function WritingPage() {
         setShowRecommendation(true)
         
         // 프로필에도 저장
-        await supabase
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const updateSupabase = supabase as any
+        await updateSupabase
           .from('profiles')
           .update({ placement_level: level, level })
           .eq('id', session.user.id)
@@ -79,20 +81,24 @@ export default function WritingPage() {
           .eq('id', session.user.id)
           .maybeSingle()
 
-        if (profile) {
-          if (profile.placement_level) {
-            setPlacementLevel(profile.placement_level)
-            setRecommendedLevel(profile.placement_level)
-            setLevel(profile.placement_level)
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const profileData = profile as { placement_level?: number; grade?: number } | null
+
+        if (profileData) {
+          if (profileData.placement_level) {
+            setPlacementLevel(profileData.placement_level)
+            setRecommendedLevel(profileData.placement_level)
+            setLevel(profileData.placement_level)
           }
           
-          if (profile.grade) {
-            setGradeLevel(profile.grade <= 3 ? 'elementary_low' : 'elementary_high')
+          if (profileData.grade) {
+            setGradeLevel(profileData.grade <= 3 ? 'elementary_low' : 'elementary_high')
           }
 
           // 에너지 정보 가져오기
-          if (profile.energy !== undefined) {
-            setEnergy(profile.energy)
+          const profileWithEnergy = profileData as { energy?: number }
+          if (profileWithEnergy.energy !== undefined) {
+            setEnergy(profileWithEnergy.energy)
           }
         }
       }

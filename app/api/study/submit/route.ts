@@ -48,6 +48,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
     }
 
+    // 타입 단언 (Supabase 타입 추론 문제 해결)
+    const profileData = profile as {
+      energy?: number
+      is_premium?: boolean
+      feedback_usage_today?: number
+    } | null
+    if (!profileData) {
+      return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+    }
+
     // 에너지 체크 및 소비 (미션 1회당 100 소비)
     try {
       await consumeEnergy(user.id, 100)
@@ -58,7 +68,7 @@ export async function POST(request: Request) {
           {
             error: '에너지가 부족합니다. 내일 에너지가 충전되면 다시 시도해주세요.',
             energyRequired: 100,
-            currentEnergy: profile.energy || 0,
+            currentEnergy: profileData.energy || 0,
           },
           { status: 403 }
         )
@@ -85,8 +95,8 @@ export async function POST(request: Request) {
     let queueStatus = 'completed'
     let queuePosition: number | null = null
 
-    if (!skipQueue && !profile.is_premium) {
-      const feedbackCount = profile.feedback_usage_today || 0
+    if (!skipQueue && !profileData.is_premium) {
+      const feedbackCount = profileData.feedback_usage_today || 0
       const freeLimit = 5 // 무료 유저 일일 제한
 
       if (feedbackCount >= freeLimit) {
@@ -96,7 +106,9 @@ export async function POST(request: Request) {
         queuePosition = 1
       } else {
         // 사용량 증가
-        await supabase
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const updateSupabase = supabase as any
+        await updateSupabase
           .from('profiles')
           .update({ feedback_usage_today: feedbackCount + 1 })
           .eq('id', user.id)
@@ -176,7 +188,7 @@ export async function POST(request: Request) {
         status: queueStatus,
         is_public: false,
         energy_gained: energyGained,
-      })
+      } as any)
       .select()
       .single()
 
@@ -199,7 +211,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '잘못된 요청 데이터입니다.', details: error.errors },
+        { error: '잘못된 요청 데이터입니다.', details: error.issues },
         { status: 400 }
       )
     }

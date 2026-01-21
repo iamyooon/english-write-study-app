@@ -41,7 +41,7 @@ export async function moderateContent(content: string): Promise<ModerationResult
     return {
       flagged: result.flagged,
       categories: result.categories,
-      categoryScores: result.category_scores,
+      categoryScores: result.category_scores as unknown as Record<string, number>,
       details: result.flagged
         ? '부적절한 내용이 감지되었습니다.'
         : undefined,

@@ -2,8 +2,18 @@
  * Writing 관련 타입 정의
  */
 
-import { StudyLog, Feedback } from './database'
+import { StudyLog } from './database'
 import { GradeLevel } from './user'
+
+// Feedback 타입 정의 (database.ts에 없을 경우)
+export interface Feedback {
+  id: string
+  study_log_id: string
+  score: number
+  feedback_text: string
+  corrected_text?: string | null
+  created_at: string
+}
 
 export type ContentType = 'text' | 'photo'
 

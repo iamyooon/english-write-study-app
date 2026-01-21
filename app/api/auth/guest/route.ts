@@ -75,40 +75,50 @@ export async function POST(request: Request) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
+
+    // 타입 단언 (Supabase 타입 추론 문제 해결)
+    const profile = existingProfile as {
+      placement_level?: number
+      energy?: number
+      gems?: number
+      is_premium?: boolean
+      vision_usage_today?: number
+      feedback_usage_today?: number
+      grade?: number
+    } | null
 
     // 프로필 생성 또는 업데이트
     // 참고: 실제 스키마에 맞춰 grade 필드 사용 (grade_level 아님)
     const profileData: any = {
       id: userId,
-      level: existingProfile?.level ?? (placementLevel ?? 1),
-      // 기존 프로필이 있으면 에너지 유지, 없으면 스키마 기본값(5) 사용
-      energy: existingProfile?.energy ?? undefined, // undefined면 DB 기본값 사용
-      gems: existingProfile?.gems ?? 0,
-      is_premium: existingProfile?.is_premium ?? false,
-      vision_usage_today: existingProfile?.vision_usage_today ?? 0,
-      feedback_usage_today: existingProfile?.feedback_usage_today ?? 0,
+      placement_level: profile?.placement_level ?? (placementLevel ?? 1),
+      // 기존 프로필이 있으면 에너지 유지, 없으면 스키마 기본값(100) 사용
+      energy: profile?.energy ?? undefined, // undefined면 DB 기본값 사용
+      gems: profile?.gems ?? 0,
+      is_premium: profile?.is_premium ?? false,
+      vision_usage_today: profile?.vision_usage_today ?? 0,
+      feedback_usage_today: profile?.feedback_usage_today ?? 0,
     }
 
     // 레벨테스트 결과가 있으면 placement_level 설정
     if (placementLevel) {
       profileData.placement_level = placementLevel
-      profileData.level = placementLevel
     }
 
     if (gradeLevel) {
       // grade 필드에 학년 저장 (1-3: 저학년, 4-6: 고학년)
       // 기존 프로필이 있으면 grade는 업데이트하지 않음
-      if (!existingProfile) {
+      if (!profile) {
         profileData.grade = gradeLevel === 'elementary_low' ? 1 : 4
       }
     }
 
     // 기존 프로필이 있으면 선택적 업데이트, 없으면 생성
-    let profile
+    let createdProfile
     let profileError
 
-    if (existingProfile) {
+    if (profile) {
       // 기존 프로필이 있으면 필요한 필드만 업데이트 (에너지는 유지)
       const updateData: any = {}
       if (gradeLevel) {
@@ -116,29 +126,30 @@ export async function POST(request: Request) {
       }
       if (placementLevel) {
         updateData.placement_level = placementLevel
-        updateData.level = placementLevel
       }
       
       if (Object.keys(updateData).length > 0) {
-        const { data, error } = await supabase
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const updateSupabase = supabase as any
+        const { data, error } = await updateSupabase
           .from('profiles')
           .update(updateData)
           .eq('id', userId)
           .select()
           .single()
-        profile = data
+        createdProfile = data
         profileError = error
       } else {
-        profile = existingProfile
+        createdProfile = profile
       }
     } else {
-      // 새 프로필 생성 (에너지는 스키마 기본값 5 사용)
+      // 새 프로필 생성 (에너지는 스키마 기본값 100 사용)
       const { data, error } = await supabase
         .from('profiles')
         .insert(profileData)
         .select()
         .single()
-      profile = data
+      createdProfile = data
       profileError = error
     }
 
@@ -164,14 +175,14 @@ export async function POST(request: Request) {
         id: userId,
         isAnonymous: true,
       },
-      profile: profile || null,
+      profile: createdProfile || null,
       session: authData.session,
       profileError: profileError ? profileError.message : null,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '잘못된 요청 데이터입니다.', details: error.errors },
+        { error: '잘못된 요청 데이터입니다.', details: error.issues },
         { status: 400 }
       )
     }

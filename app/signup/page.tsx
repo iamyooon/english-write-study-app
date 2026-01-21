@@ -76,7 +76,7 @@ export default function SignupPage() {
           .upsert({
             id: data.user.id,
             name: name.trim(),
-          }, {
+          } as any, {
             onConflict: 'id'
           })
           .select()

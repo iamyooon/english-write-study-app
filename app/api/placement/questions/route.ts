@@ -82,7 +82,7 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '잘못된 요청 데이터입니다.', details: error.errors },
+        { error: '잘못된 요청 데이터입니다.', details: error.issues },
         { status: 400 }
       )
     }

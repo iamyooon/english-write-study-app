@@ -104,7 +104,9 @@ export default function Header() {
               }
               // 프로필이 없으면 생성
               const supabase = createClient()
-              const { data: newProfile, error: createError } = await supabase
+              // 타입 단언 (Supabase 타입 추론 문제 해결)
+              const insertSupabase = supabase as any
+              const { data: newProfile, error: createError } = await insertSupabase
                 .from('profiles')
                 .insert({
                   id: userId,
@@ -298,7 +300,9 @@ export default function Header() {
       if (!profile) {
         // 프로필이 없으면 생성
         console.log('프로필이 없어서 생성 시도')
-        const { data: newProfile, error: createError } = await supabase
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const insertSupabase = supabase as any
+        const { data: newProfile, error: createError } = await insertSupabase
           .from('profiles')
           .insert({
             id: userId,

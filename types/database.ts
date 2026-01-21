@@ -25,6 +25,7 @@ export interface Database {
       profiles: {
         Row: {
           id: string
+          name: Text
           grade: number | null
           publisher: Text
           level: number
@@ -34,11 +35,13 @@ export interface Database {
           vision_usage_today: number
           feedback_usage_today: number
           placement_level: number | null
+          energy_last_charged: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id: string
+          name?: Text
           grade?: number | null
           publisher?: Text
           level?: number
@@ -48,11 +51,13 @@ export interface Database {
           vision_usage_today?: number
           feedback_usage_today?: number
           placement_level?: number | null
+          energy_last_charged?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          name?: Text
           grade?: number | null
           publisher?: Text
           level?: number
@@ -62,6 +67,7 @@ export interface Database {
           vision_usage_today?: number
           feedback_usage_today?: number
           placement_level?: number | null
+          energy_last_charged?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -121,6 +127,7 @@ export interface Database {
           ai_feedback: Json | null
           status: string
           is_public: boolean
+          energy_gained: number | null
           created_at: string
         }
         Insert: {
@@ -131,6 +138,7 @@ export interface Database {
           ai_feedback?: Json | null
           status?: string
           is_public?: boolean
+          energy_gained?: number | null
           created_at?: string
         }
         Update: {
@@ -141,6 +149,7 @@ export interface Database {
           ai_feedback?: Json | null
           status?: string
           is_public?: boolean
+          energy_gained?: number | null
           created_at?: string
         }
       }
@@ -180,3 +189,4 @@ export type StudyLogUpdate = Database['public']['Tables']['study_logs']['Update'
 export type PublisherType = 'chunjae' | 'ybm'
 export type ShopItemType = 'outfit' | 'decoration'
 export type StudyLogStatus = 'completed' | 'queued'
+

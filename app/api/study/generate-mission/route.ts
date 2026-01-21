@@ -42,8 +42,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
     }
 
+    // 타입 단언 (Supabase 타입 추론 문제 해결)
+    const profileData = profile as { energy?: number } | null
+    if (!profileData) {
+      return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 })
+    }
+
     // 에너지 체크 (문장 생성 시 1 에너지 소모)
-    const currentEnergy = profile.energy || 0
+    const currentEnergy = profileData.energy || 0
     const energyCost = 1
 
     if (currentEnergy < energyCost) {
@@ -119,7 +125,9 @@ export async function POST(request: Request) {
 
     // 에너지 소모
     const newEnergy = Math.max(0, currentEnergy - energyCost)
-    const { error: updateError } = await supabase
+    // 타입 단언 (Supabase 타입 추론 문제 해결)
+    const updateSupabase = supabase as any
+    const { error: updateError } = await updateSupabase
       .from('profiles')
       .update({ energy: newEnergy })
       .eq('id', user.id)
@@ -146,7 +154,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '잘못된 요청 데이터입니다.', details: error.errors },
+        { error: '잘못된 요청 데이터입니다.', details: error.issues },
         { status: 400 }
       )
     }

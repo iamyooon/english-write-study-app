@@ -2,7 +2,22 @@
  * 게이미피케이션 관련 타입 정의
  */
 
-import { CharacterCustomization, InventoryItem } from './database'
+// CharacterCustomization 타입 정의 (database.ts에 없을 경우)
+export interface CharacterCustomization {
+  userId: string
+  parts: Record<string, string>
+  colors: Record<string, string>
+  createdAt: string
+}
+
+// InventoryItem 타입 정의 (database.ts에 없을 경우)
+export interface InventoryItem {
+  id: string
+  itemId: string
+  userId: string
+  isEquipped: boolean
+  createdAt: string
+}
 
 export type ItemType = 'character_part' | 'decoration' | 'theme'
 

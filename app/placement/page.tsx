@@ -64,16 +64,19 @@ export default function PlacementTestPage() {
         .from('profiles')
         .select('grade, placement_level')
         .eq('id', session.user.id)
-        .single()
+        .maybeSingle()
+
+      // 타입 단언 (Supabase 타입 추론 문제 해결)
+      const profileData = profile as { grade?: number; placement_level?: number } | null
 
       // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
-      if (profile?.placement_level) {
+      if (profileData?.placement_level) {
         router.push('/writing')
         return
       }
 
-      if (profile?.grade) {
-        setGradeLevel(profile.grade <= 3 ? 'elementary_low' : 'elementary_high')
+      if (profileData?.grade) {
+        setGradeLevel(profileData.grade <= 3 ? 'elementary_low' : 'elementary_high')
       }
     }
     checkSession()

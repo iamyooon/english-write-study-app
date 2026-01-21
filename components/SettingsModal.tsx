@@ -85,16 +85,19 @@ export default function SettingsModal({ isOpen, onClose, userId }: SettingsModal
         .maybeSingle()
 
       const profileEndTime = Date.now()
+      // 타입 단언 (Supabase 타입 추론 문제 해결)
+      const profileData = profile as { name?: string | null } | null
+
       console.log('[설정 모달] 프로필 조회 완료:', { 
         duration: `${profileEndTime - profileStartTime}ms`,
         profile,
         loadError,
-        profileName: profile?.name
+        profileName: profileData?.name
       })
 
-      if (profile?.name) {
-        console.log('[설정 모달] 프로필 이름 설정:', profile.name)
-        setName(profile.name)
+      if (profileData?.name) {
+        console.log('[설정 모달] 프로필 이름 설정:', profileData.name)
+        setName(profileData.name)
       } else {
         console.log('[설정 모달] 프로필 이름 없음, 빈 문자열 설정')
         setName('')
@@ -195,8 +198,11 @@ export default function SettingsModal({ isOpen, onClose, userId }: SettingsModal
       console.log('[설정 모달] upsert 호출 시작')
       const upsertStartTime = Date.now()
       
+      // 타입 단언 (Supabase 타입 추론 문제 해결)
+      const upsertSupabase = supabase as any
+      
       // upsert 사용 (프로필이 없으면 생성, 있으면 업데이트)
-      const { data: updatedProfile, error } = await supabase
+      const { data: updatedProfile, error } = await upsertSupabase
         .from('profiles')
         .upsert({
           id: userId,
@@ -225,15 +231,18 @@ export default function SettingsModal({ isOpen, onClose, userId }: SettingsModal
         throw error
       }
 
+      // 타입 단언 (Supabase 타입 추론 문제 해결)
+      const updatedProfileData = updatedProfile as { name?: string | null } | null
+
       console.log('[설정 모달] 에러 없음, 결과 확인 시작')
       console.log('[설정 모달] updatedProfile:', updatedProfile)
-      console.log('[설정 모달] updatedProfile?.name:', updatedProfile?.name)
+      console.log('[설정 모달] updatedProfile?.name:', updatedProfileData?.name)
       console.log('[설정 모달] trimmedName:', trimmedName)
-      console.log('[설정 모달] 이름 일치 여부:', updatedProfile?.name === trimmedName)
+      console.log('[설정 모달] 이름 일치 여부:', updatedProfileData?.name === trimmedName)
 
       // 저장 후 확인
-      if (updatedProfile && updatedProfile.name === trimmedName) {
-        console.log('[설정 모달] 이름 저장 성공:', updatedProfile)
+      if (updatedProfileData && updatedProfileData.name === trimmedName) {
+        console.log('[설정 모달] 이름 저장 성공:', updatedProfileData)
         toast.success('이름이 변경되었습니다!')
         
         console.log('[설정 모달] profileUpdated 이벤트 디스패치 시작')

@@ -27,15 +27,25 @@ export async function consumeEnergy(userId: string, amount: number = 100) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { energy?: number } | null
+  if (!profileData) {
+    throw new Error('Profile not found')
+  }
+
   // 에너지 부족 체크
-  if (profile.energy < amount) {
-    throw new Error(`Insufficient energy: ${profile.energy}/${amount}`)
+  const currentEnergy = profileData.energy ?? 0
+  if (currentEnergy < amount) {
+    throw new Error(`Insufficient energy: ${currentEnergy}/${amount}`)
   }
 
   // 에너지 차감 (최소 0)
-  const newEnergy = Math.max(profile.energy - amount, 0)
+  const newEnergy = Math.max(currentEnergy - amount, 0)
   
-  const { data, error } = await supabase
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const updateSupabase = supabase as any
+  
+  const { data, error } = await updateSupabase
     .from('profiles')
     .update({ energy: newEnergy })
     .eq('id', userId)
@@ -69,10 +79,19 @@ export async function produceEnergy(userId: string, amount: number = 10) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { energy?: number } | null
+  if (!profileData) {
+    throw new Error('Profile not found')
+  }
+
   // 에너지 증가 (최대 100)
-  const newEnergy = Math.min(profile.energy + amount, 100)
+  const newEnergy = Math.min((profileData.energy ?? 0) + amount, 100)
   
-  const { data, error } = await supabase
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const updateSupabase = supabase as any
+  
+  const { data, error } = await updateSupabase
     .from('profiles')
     .update({ energy: newEnergy })
     .eq('id', userId)
@@ -106,10 +125,19 @@ export async function chargeEnergyDaily(userId: string, amount: number = 5) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { energy?: number } | null
+  if (!profileData) {
+    throw new Error('Profile not found')
+  }
+
   // 에너지 증가 (최대 100)
-  const newEnergy = Math.min(profile.energy + amount, 100)
+  const newEnergy = Math.min((profileData.energy ?? 0) + amount, 100)
   
-  const { data, error } = await supabase
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const updateSupabase = supabase as any
+  
+  const { data, error } = await updateSupabase
     .from('profiles')
     .update({ 
       energy: newEnergy,
@@ -148,7 +176,9 @@ export async function getUsersNeedingEnergyCharge() {
     throw new Error(`Failed to fetch users needing charge: ${error.message}`)
   }
 
-  return data.map(profile => profile.id)
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profiles = (data || []) as Array<{ id: string }>
+  return profiles.map(profile => profile.id)
 }
 
 /**
@@ -168,10 +198,14 @@ export async function updateGems(userId: string, amount: number) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { gems?: number } | null
+  const updateSupabase = supabase as any
+
   // 젬 업데이트 (최소 0)
-  const newGems = Math.max(profile.gems + amount, 0)
+  const newGems = Math.max((profileData?.gems ?? 0) + amount, 0)
   
-  const { data, error } = await supabase
+  const { data, error } = await updateSupabase
     .from('profiles')
     .update({ gems: newGems })
     .eq('id', userId)
@@ -202,9 +236,13 @@ export async function incrementVisionUsage(userId: string) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
-  const { data, error } = await supabase
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { vision_usage_today?: number } | null
+  const updateSupabase = supabase as any
+
+  const { data, error } = await updateSupabase
     .from('profiles')
-    .update({ vision_usage_today: (profile.vision_usage_today || 0) + 1 })
+    .update({ vision_usage_today: (profileData?.vision_usage_today || 0) + 1 })
     .eq('id', userId)
     .select()
     .single()
@@ -233,9 +271,13 @@ export async function incrementFeedbackUsage(userId: string) {
     throw new Error(`Failed to fetch profile: ${fetchError?.message}`)
   }
 
-  const { data, error } = await supabase
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { feedback_usage_today?: number } | null
+  const updateSupabase = supabase as any
+
+  const { data, error } = await updateSupabase
     .from('profiles')
-    .update({ feedback_usage_today: (profile.feedback_usage_today || 0) + 1 })
+    .update({ feedback_usage_today: (profileData?.feedback_usage_today || 0) + 1 })
     .eq('id', userId)
     .select()
     .single()
@@ -348,15 +390,20 @@ export async function purchaseItem(userId: string, itemId: number) {
     throw new Error('Profile not found')
   }
 
+  // 타입 단언 (Supabase 타입 추론 문제 해결)
+  const profileData = profile as { gems?: number } | null
+  const itemData = item as { cost_gems?: number } | null
+
   // 3. 젬 확인
-  if (profile.gems < item.cost_gems) {
+  if ((profileData?.gems ?? 0) < (itemData?.cost_gems ?? 0)) {
     throw new Error('Insufficient gems')
   }
 
   // 4. 트랜잭션: 젬 차감 + 아이템 추가
-  const { data: updatedProfile, error: updateError } = await supabase
+  const rollbackSupabase = supabase as any
+  const { data: updatedProfile, error: updateError } = await rollbackSupabase
     .from('profiles')
-    .update({ gems: profile.gems - item.cost_gems })
+    .update({ gems: (profileData?.gems ?? 0) - (itemData?.cost_gems ?? 0) })
     .eq('id', userId)
     .select()
     .single()
@@ -371,15 +418,17 @@ export async function purchaseItem(userId: string, itemId: number) {
       user_id: userId,
       item_id: itemId,
       is_equipped: false,
-    })
+    } as any)
     .select()
     .single()
 
   if (inventoryError) {
     // 롤백: 젬 복구
-    await supabase
+    const profileData = profile as { gems?: number } | null
+    const rollbackSupabase = supabase as any
+    await rollbackSupabase
       .from('profiles')
-      .update({ gems: profile.gems })
+      .update({ gems: profileData?.gems ?? 0 })
       .eq('id', userId)
     
     throw new Error(`Failed to add item to inventory: ${inventoryError.message}`)

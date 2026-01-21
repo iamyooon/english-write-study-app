@@ -49,11 +49,14 @@ export default function OnboardingPage() {
 
         console.log('[온보딩] 프로필 조회 완료:', { profile, profileError })
 
-        if (isMounted && profile?.grade && !profileError) {
-          console.log('[온보딩] 프로필에서 학년 정보 발견:', profile.grade)
-          if (profile.grade >= 1 && profile.grade <= 3) {
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const profileData = profile as { grade?: number; placement_level?: number } | null
+
+        if (isMounted && profileData?.grade && !profileError) {
+          console.log('[온보딩] 프로필에서 학년 정보 발견:', profileData.grade)
+          if (profileData.grade >= 1 && profileData.grade <= 3) {
             setSelectedGrade('elementary_low')
-          } else if (profile.grade >= 4 && profile.grade <= 6) {
+          } else if (profileData.grade >= 4 && profileData.grade <= 6) {
             setSelectedGrade('elementary_high')
           }
         } else {
@@ -229,12 +232,15 @@ export default function OnboardingPage() {
 
       if (existingProfile) {
         // 기존 프로필 업데이트 (이름 유지)
+        const existingProfileData = existingProfile as { name?: string } | null
         const updateData = {
           ...profileData,
           // 기존 이름이 있으면 유지
-          name: existingProfile.name || profileData.name,
+          name: existingProfileData?.name || profileData.name,
         }
-        await supabase
+        // 타입 단언 (Supabase 타입 추론 문제 해결)
+        const updateSupabase = supabase as any
+        await updateSupabase
           .from('profiles')
           .update(updateData)
           .eq('id', session.user.id)
