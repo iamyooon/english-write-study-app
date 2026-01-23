@@ -16,6 +16,8 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [existingPlacementLevel, setExistingPlacementLevel] = useState<number | null>(null)
+  const [showPlacementOption, setShowPlacementOption] = useState(false)
 
   // 상태 변경 추적을 위한 로그
   useEffect(() => {
@@ -52,15 +54,24 @@ export default function OnboardingPage() {
         // 타입 단언 (Supabase 타입 추론 문제 해결)
         const profileData = profile as { grade?: number; placement_level?: number } | null
 
-        if (isMounted && profileData?.grade && !profileError) {
-          console.log('[온보딩] 프로필에서 학년 정보 발견:', profileData.grade)
-          if (profileData.grade >= 1 && profileData.grade <= 3) {
-            setSelectedGrade('elementary_low')
-          } else if (profileData.grade >= 4 && profileData.grade <= 6) {
-            setSelectedGrade('elementary_high')
+        if (isMounted && !profileError) {
+          // 이미 placement_level이 있으면 저장
+          if (profileData?.placement_level) {
+            console.log('[온보딩] 기존 placement_level 발견:', profileData.placement_level)
+            setExistingPlacementLevel(profileData.placement_level)
           }
-        } else {
-          console.log('[온보딩] 프로필에 학년 정보 없음')
+
+          // 학년 정보 설정
+          if (profileData?.grade) {
+            console.log('[온보딩] 프로필에서 학년 정보 발견:', profileData.grade)
+            if (profileData.grade >= 1 && profileData.grade <= 3) {
+              setSelectedGrade('elementary_low')
+            } else if (profileData.grade >= 4 && profileData.grade <= 6) {
+              setSelectedGrade('elementary_high')
+            }
+          } else {
+            console.log('[온보딩] 프로필에 학년 정보 없음')
+          }
         }
       } catch (profileError) {
         console.warn('[온보딩] 프로필 로드 실패:', profileError)
@@ -188,6 +199,14 @@ export default function OnboardingPage() {
     }
   }, [isLoggedIn])
 
+  // 기존 placement_level이 있으면 바로 Writing으로 리다이렉트
+  useEffect(() => {
+    if (existingPlacementLevel && isLoggedIn && !isLoading) {
+      console.log('[온보딩] 기존 placement_level 발견, Writing으로 리다이렉트')
+      router.push(`/writing?placement_level=${existingPlacementLevel}`)
+    }
+  }, [existingPlacementLevel, isLoggedIn, isLoading, router])
+
   const handleContinue = async () => {
     if (!selectedGrade) return
 
@@ -257,14 +276,21 @@ export default function OnboardingPage() {
       // 프로필 업데이트 후 헤더에 알림
       window.dispatchEvent(new Event('profileUpdated'))
 
-      // 레벨테스트 결과가 있으면 Writing 페이지로, 없으면 Placement Test로
+      // 레벨테스트 결과가 있으면 Writing 페이지로
       if (placementLevel) {
         toast.success('시작 준비가 완료되었습니다!')
         sessionStorage.removeItem('placement_result') // 저장된 결과 삭제
         router.push(`/writing?placement_level=${placementLevel}`)
-      } else {
+      } 
+      // Placement Test 재시도 옵션이 활성화되었거나 placement_level이 없으면 Placement Test로
+      else if (showPlacementOption || !existingPlacementLevel) {
         toast.success('레벨테스트를 시작합니다!')
-        router.push(`/placement?gradeLevel=${selectedGrade}`)
+        router.push(`/placement?gradeLevel=${selectedGrade}${showPlacementOption ? '&retake=true' : ''}`)
+      } 
+      // 기존 placement_level이 있으면 Writing 페이지로 (Placement Test 건너뛰기)
+      else if (existingPlacementLevel) {
+        toast.success('기존 레벨로 학습을 시작합니다!')
+        router.push(`/writing?placement_level=${existingPlacementLevel}`)
       }
     } catch (error: any) {
       console.error('온보딩 오류:', error)
@@ -296,6 +322,18 @@ export default function OnboardingPage() {
   }
 
   console.log('[온보딩] 메인 화면 표시')
+
+  // 기존 placement_level이 있으면 로딩 화면 표시 (리다이렉트 중)
+  if (existingPlacementLevel && isLoggedIn) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">학습 페이지로 이동 중...</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
@@ -338,17 +376,43 @@ export default function OnboardingPage() {
           </button>
         </div>
 
-        <button
-          onClick={handleContinue}
-          disabled={!selectedGrade || isLoading}
-          className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${
-            selectedGrade && !isLoading
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {isLoading ? '준비 중...' : '시작하기'}
-        </button>
+        {/* Placement Test 재시도 옵션 (기존 레벨이 있는 경우) */}
+        {existingPlacementLevel && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-gray-700 mb-2">
+              이미 레벨 {existingPlacementLevel}로 설정되어 있습니다.
+            </p>
+            <button
+              onClick={() => setShowPlacementOption(true)}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              레벨테스트를 다시 받고 싶어요
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <button
+            onClick={handleContinue}
+            disabled={!selectedGrade || isLoading}
+            className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${
+              selectedGrade && !isLoading
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {isLoading ? '준비 중...' : showPlacementOption || !existingPlacementLevel ? '레벨테스트 시작' : '학습 시작하기'}
+          </button>
+          
+          {existingPlacementLevel && !showPlacementOption && (
+            <button
+              onClick={() => router.push(`/writing?placement_level=${existingPlacementLevel}`)}
+              className="w-full px-6 py-3 rounded-lg font-semibold transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl"
+            >
+              기존 레벨로 학습 시작
+            </button>
+          )}
+        </div>
       </div>
     </main>
   )

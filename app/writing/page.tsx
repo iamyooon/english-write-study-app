@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { filterProfanity } from '@/lib/safety/profanity-filter'
 import toast from 'react-hot-toast'
+import DragDropMission from '@/components/DragDropMission'
 
 interface Mission {
   korean: string
@@ -16,10 +17,21 @@ interface Mission {
   level: number
 }
 
+interface DragDropMissionData {
+  id: string
+  korean: string
+  template: string
+  blanks: number
+  wordOptions: string[]
+  correctAnswers: string[]
+  level: number
+}
+
 interface Feedback {
   score: number
   feedback: string
   corrected?: string
+  hint?: string
   errors?: Array<{
     type: string
     original: string
@@ -31,8 +43,10 @@ interface Feedback {
 
 export default function WritingPage() {
   const [mission, setMission] = useState<Mission | null>(null)
+  const [dragDropMission, setDragDropMission] = useState<DragDropMissionData | null>(null)
   const [userInput, setUserInput] = useState('')
   const [feedback, setFeedback] = useState<Feedback | null>(null)
+  const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high'>('elementary_low')
@@ -41,6 +55,22 @@ export default function WritingPage() {
   const [recommendedLevel, setRecommendedLevel] = useState<number | null>(null)
   const [showRecommendation, setShowRecommendation] = useState(false)
   const [energy, setEnergy] = useState<number>(5) // 기본값 5
+
+  // 레벨 1~2는 Drag & Drop, 3~6은 키보드 입력
+  const isDragDropMode = level <= 2
+
+  // 레벨 변경 시 상태 초기화
+  useEffect(() => {
+    if (isDragDropMode) {
+      // Drag & Drop 모드로 전환 시 기존 미션 초기화
+      setMission(null)
+      setUserInput('')
+      setFeedback(null)
+    } else {
+      // 키보드 입력 모드로 전환 시 Drag & Drop 미션 초기화
+      setDragDropMission(null)
+    }
+  }, [isDragDropMode])
 
   // 사용자 세션 확인 및 placement_level 가져오기
   useEffect(() => {
@@ -106,66 +136,195 @@ export default function WritingPage() {
     checkSession()
   }, [])
 
+  // 자동 문장 생성 효과
+  useEffect(() => {
+    if (!shouldAutoGenerate || !feedback) return
+    
+    console.log('[자동 생성] 시작:', { shouldAutoGenerate, feedbackScore: feedback.score, energy })
+    
+    const timer = setTimeout(async () => {
+      try {
+        console.log('[자동 생성] 타이머 실행')
+        // 에너지 체크
+        if (energy < 1) {
+          console.log('[자동 생성] 에너지 부족')
+          toast.error('에너지가 부족합니다. 에너지를 충전해주세요.')
+          setShouldAutoGenerate(false)
+          return
+        }
+        
+        console.log('[자동 생성] 문장 생성 시작')
+        // 피드백 초기화
+        setFeedback(null)
+        setUserInput('')
+        setShouldAutoGenerate(false)
+        
+        // 다음 문장 생성
+        await handleGenerateMission()
+        console.log('[자동 생성] 문장 생성 완료')
+      } catch (error: any) {
+        console.error('[자동 생성] 오류:', error)
+        toast.error(error.message || '다음 문장 생성에 실패했습니다. 다시 시도해주세요.')
+        setShouldAutoGenerate(false)
+      }
+    }, 2000)
+    
+    return () => {
+      console.log('[자동 생성] 타이머 정리')
+      clearTimeout(timer)
+    }
+  }, [shouldAutoGenerate, feedback, energy])
+
   // 한글 문장 생성
   const handleGenerateMission = async () => {
+    console.log('[문장 생성] 시작:', { isDragDropMode, gradeLevel, level, energy })
     setIsGenerating(true)
     try {
-      const response = await fetch('/api/study/generate-mission', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          gradeLevel,
-          level,
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || '문장 생성에 실패했습니다.')
-      }
-
-      const data = await response.json()
-      setMission(data.mission)
-      setUserInput('')
-      setFeedback(null)
-      
-      // 에너지 업데이트
-      if (data.energy) {
-        setEnergy(data.energy.current)
-        // 헤더에 에너지 업데이트 알림
-        window.dispatchEvent(new Event('energyUpdated'))
-        toast.success(`새 문장이 생성되었습니다! (에너지 ${data.energy.current}/5)`, {
-          icon: '⚡',
+      // Drag & Drop 모드인 경우 별도 API 호출
+      if (isDragDropMode) {
+        console.log('[문장 생성] Drag & Drop 모드 - API 호출 시작')
+        const response = await fetch('/api/study/generate-drag-drop-mission', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            gradeLevel,
+            level,
+          }),
         })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || '미션 생성에 실패했습니다.')
+        }
+
+        const data = await response.json()
+        console.log('[문장 생성] Drag & Drop 미션 생성 완료:', { missionId: data.mission?.id, energy: data.energy })
+        setDragDropMission(data.mission)
+        setMission(null)
+        setUserInput('')
+        setFeedback(null)
+        
+        // 에너지 업데이트
+        if (data.energy) {
+          console.log('[문장 생성] 에너지 업데이트:', { before: energy, after: data.energy.current })
+          setEnergy(data.energy.current)
+          // Header의 에너지도 실시간으로 업데이트
+          window.dispatchEvent(new Event('energyUpdated'))
+          toast.success(`새 미션이 생성되었습니다! (에너지 ${data.energy.current}/100)`, {
+            icon: '⚡',
+          })
+        } else {
+          console.log('[문장 생성] 에너지 정보 없음')
+          toast.success('새 미션이 생성되었습니다!')
+        }
       } else {
-        toast.success('새 문장이 생성되었습니다!')
+        // 기존 키보드 입력 방식
+        const response = await fetch('/api/study/generate-mission', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            gradeLevel,
+            level,
+          }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || '문장 생성에 실패했습니다.')
+        }
+
+        const data = await response.json()
+        console.log('[문장 생성] 키보드 입력 미션 생성 완료:', { missionId: data.mission?.id, korean: data.mission?.korean, energy: data.energy })
+        setMission(data.mission)
+        setDragDropMission(null)
+        setUserInput('')
+        setFeedback(null)
+        
+        // 에너지 업데이트
+        if (data.energy) {
+          console.log('[문장 생성] 에너지 업데이트:', { before: energy, after: data.energy.current })
+          setEnergy(data.energy.current)
+          // Header의 에너지도 실시간으로 업데이트
+          window.dispatchEvent(new Event('energyUpdated'))
+          toast.success(`새 문장이 생성되었습니다! (에너지 ${data.energy.current}/100)`, {
+            icon: '⚡',
+          })
+        } else {
+          console.log('[문장 생성] 에너지 정보 없음')
+          toast.success('새 문장이 생성되었습니다!')
+        }
       }
     } catch (error: any) {
-      console.error('문장 생성 오류:', error)
+      console.error('[문장 생성] 오류 발생:', { error, message: error.message, stack: error.stack })
       
       // 에너지 부족 에러 처리
       if (error.message && error.message.includes('에너지가 부족합니다')) {
+        console.log('[문장 생성] 에너지 부족 에러')
         toast.error('⚡ 에너지가 부족합니다! 에너지를 충전해주세요.', {
           duration: 5000,
         })
       } else {
+        console.error('[문장 생성] 기타 에러:', error)
         toast.error(error.message || '문장 생성 중 오류가 발생했습니다.')
       }
     } finally {
+      console.log('[문장 생성] 완료 (성공/실패 무관)')
       setIsGenerating(false)
+    }
+  }
+
+  // Drag & Drop 완료 핸들러
+  const handleDragDropComplete = async (isCorrect: boolean, userAnswer: string[]) => {
+    console.log('[DragDrop 완료] 시작:', { isCorrect, userAnswer, hasDragDropMission: !!dragDropMission })
+    if (!dragDropMission) {
+      console.warn('[DragDrop 완료] dragDropMission 없음')
+      return
+    }
+
+    // 힌트 생성 (정답/오답 모두)
+    const hint = isCorrect
+      ? '잘했어요! 다음 문장도 같은 실력을 발휘해보세요. 문법과 단어 선택에 주의하면서 작성해보세요.'
+      : '다음 문장을 작성할 때는 문법 규칙과 단어의 올바른 사용법을 다시 한번 확인해보세요. 천천히 생각하면서 작성하면 더 좋은 결과를 얻을 수 있어요!'
+    
+    // 피드백 설정 (힌트 포함)
+    const feedbackData: Feedback = {
+      score: isCorrect ? 100 : 50,
+      feedback: isCorrect ? '정답입니다! 잘했어요! 🎉' : '다시 시도해보세요! 💪',
+      hint: hint,
+    }
+    
+    console.log('[DragDrop 완료] 피드백 설정:', { score: feedbackData.score, hasHint: !!feedbackData.hint })
+    setFeedback(feedbackData)
+
+    if (isCorrect) {
+      console.log('[DragDrop 완료] 정답 - 자동 생성 플래그 설정')
+      toast.success('정답입니다! 🎉 다음 문장을 생성합니다...', {
+        duration: 2000,
+      })
+      // 자동 생성 플래그 설정
+      setShouldAutoGenerate(true)
+    } else {
+      console.log('[DragDrop 완료] 오답')
+      toast.error('다시 시도해보세요! 💪 힌트를 확인해보세요 💡')
     }
   }
 
   // Writing 제출
   const handleSubmit = async () => {
+    console.log('[제출] 시작:', { hasMission: !!mission, userInputLength: userInput.trim().length })
+    
     if (!mission) {
+      console.warn('[제출] 미션 없음')
       toast.error('먼저 한글 문장을 생성해주세요.')
       return
     }
 
     if (!userInput.trim()) {
+      console.warn('[제출] 입력 없음')
       toast.error('영어 문장을 입력해주세요.')
       return
     }
@@ -173,10 +332,12 @@ export default function WritingPage() {
     // 3중 필터링: 1단계 - 클라이언트 금칙어 필터
     const profanityCheck = filterProfanity(userInput)
     if (!profanityCheck.isValid) {
+      console.warn('[제출] 금칙어 필터링 실패:', profanityCheck)
       toast.error(profanityCheck.message || '나쁜 말은 안 돼요!')
       return
     }
 
+    console.log('[제출] 검증 통과, API 호출 시작')
     setIsSubmitting(true)
     try {
       const response = await fetch('/api/study/submit', {
@@ -194,28 +355,174 @@ export default function WritingPage() {
 
       if (!response.ok) {
         const error = await response.json()
+        console.error('[제출] API 오류 응답:', { status: response.status, error })
         throw new Error(error.error || '제출에 실패했습니다.')
       }
 
       const data = await response.json()
+      console.log('[제출] API 응답 받음:', { queueStatus: data.queueStatus, hasFeedback: !!data.feedback })
 
       if (data.queueStatus === 'queued') {
+        console.log('[제출] 대기열 상태')
         toast('오늘의 무료 평가를 모두 사용했습니다. 내일 다시 시도해주세요!', {
           icon: '⏰',
           duration: 5000,
         })
       } else {
+        // 힌트가 없으면 기본 힌트 추가
+        if (!data.feedback || !data.feedback.hint || data.feedback.hint.trim() === '') {
+          if (!data.feedback) {
+            data.feedback = { score: 0, feedback: '평가가 완료되었습니다.' }
+          }
+          const score = data.feedback?.score || 0
+          if (score >= 80) {
+            data.feedback.hint = '잘했어요! 다음 문장도 같은 실력을 발휘해보세요. 문법과 단어 선택에 주의하면서 작성해보세요.'
+          } else {
+            data.feedback.hint = '다음 문장을 작성할 때는 문법 규칙과 단어의 올바른 사용법을 다시 한번 확인해보세요. 천천히 생각하면서 작성하면 더 좋은 결과를 얻을 수 있어요!'
+          }
+        }
+        
+        console.log('[제출] 피드백 받음:', { score: data.feedback?.score, hasHint: !!data.feedback?.hint, hint: data.feedback?.hint })
         setFeedback(data.feedback)
-        toast.success('평가가 완료되었습니다!')
+        
+        // 정답인 경우 (점수가 높은 경우) 자동으로 다음 문장 생성
+        const isCorrect = data.feedback?.score >= 80
+        console.log('[제출] 정답 여부:', { isCorrect, score: data.feedback?.score })
+        if (isCorrect) {
+          toast.success('정답입니다! 🎉 다음 문장을 생성합니다...', {
+            duration: 2000,
+          })
+          // 자동 생성 플래그 설정
+          console.log('[제출] 자동 생성 플래그 설정')
+          setShouldAutoGenerate(true)
+        } else {
+          toast.success('평가가 완료되었습니다! 힌트를 확인해보세요 💡')
+        }
       }
     } catch (error: any) {
-      console.error('제출 오류:', error)
+      console.error('[제출] 오류 발생:', { error, message: error.message, stack: error.stack })
       toast.error(error.message || '제출 중 오류가 발생했습니다.')
     } finally {
+      console.log('[제출] 완료 (성공/실패 무관)')
       setIsSubmitting(false)
     }
   }
 
+  // Drag & Drop 모드 렌더링 (레벨 1~2)
+  if (isDragDropMode) {
+    return (
+      <main className="min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-800">
+              단어 드래그 미션
+            </h1>
+            <p className="text-gray-600 mt-2">레벨 {level} - 단어를 드래그하여 문장을 완성하세요!</p>
+          </div>
+          
+          {dragDropMission ? (
+            <>
+              <DragDropMission key={dragDropMission.id} mission={dragDropMission} onComplete={handleDragDropComplete} />
+              
+              {/* 피드백 표시 (Drag & Drop 모드) */}
+              {feedback && (
+                <div className="mt-6 p-6 bg-green-50 border-2 border-green-200 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-800">평가 결과</h3>
+                    <div className="text-2xl font-bold text-indigo-600">{feedback.score}점</div>
+                  </div>
+
+                  <div className="text-gray-700">{feedback.feedback}</div>
+
+                  {/* 힌트 표시 (정답/오답 모두 표시) - 항상 표시 */}
+                  <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <span className="text-xl">💡</span>
+                      <div>
+                        <div className="text-sm font-semibold text-yellow-800 mb-1">다음 문장 힌트</div>
+                        <div className="text-sm text-yellow-700">
+                          {feedback.hint || (feedback.score >= 80 
+                            ? '잘했어요! 다음 문장도 같은 실력을 발휘해보세요.'
+                            : '다음 문장을 작성할 때는 문법 규칙과 단어의 올바른 사용법을 다시 한번 확인해보세요.')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 오답인 경우 다음 문장 생성 버튼 (정답은 자동 생성됨) */}
+                  {feedback.score < 80 && (
+                    <div className="flex justify-center pt-4">
+                      <button
+                        onClick={handleGenerateMission}
+                        disabled={isGenerating || energy < 1}
+                        className={`px-6 py-3 font-semibold rounded-lg transition-all ${
+                          energy < 1
+                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                            : isGenerating
+                            ? 'bg-indigo-400 text-white cursor-not-allowed'
+                            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 shadow-lg hover:shadow-xl transform hover:scale-105'
+                        }`}
+                        title={energy < 1 ? '에너지가 부족합니다 (1 에너지 필요)' : ''}
+                      >
+                        {isGenerating ? '생성 중...' : energy < 1 ? '⚡ 에너지 부족' : '다음 문장 다시 시도하기 (⚡ 1)'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleGenerateMission}
+                  disabled={isGenerating || energy < 1}
+                  className={`px-6 py-3 text-white rounded-lg transition-all ${
+                    energy < 1
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : isGenerating
+                      ? 'bg-indigo-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                  title={energy < 1 ? '에너지가 부족합니다 (1 에너지 필요)' : ''}
+                >
+                  {isGenerating ? '생성 중...' : energy < 1 ? '⚡ 에너지 부족' : '새 미션 생성 (⚡ 1)'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
+              <div className="space-y-4">
+                <div className="text-6xl mb-4">🎯</div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  드래그 앤 드롭 미션
+                </h2>
+                <p className="text-gray-600">
+                  레벨 {level}은 단어를 드래그하여 문장을 완성하는 방식입니다.
+                  <br />
+                  아래 버튼을 눌러 미션을 시작해보세요!
+                </p>
+              </div>
+              <button
+                onClick={handleGenerateMission}
+                disabled={isGenerating || energy < 1}
+                className={`px-8 py-4 text-lg font-semibold text-white rounded-lg transition-all shadow-lg ${
+                  energy < 1
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : isGenerating
+                    ? 'bg-indigo-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl transform hover:scale-105'
+                }`}
+                title={energy < 1 ? '에너지가 부족합니다 (1 에너지 필요)' : ''}
+              >
+                {isGenerating ? '미션 생성 중...' : energy < 1 ? '⚡ 에너지 부족' : '미션 시작하기 (⚡ 1)'}
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+    )
+  }
+
+  // 키보드 입력 모드 렌더링 (레벨 3~6)
   return (
     <main className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
@@ -396,6 +703,41 @@ export default function WritingPage() {
                     <li key={index}>{suggestion}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* 힌트 표시 (정답/오답 모두 표시) - 항상 표시 */}
+            <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+              <div className="flex items-start gap-2">
+                <span className="text-xl">💡</span>
+                <div>
+                  <div className="text-sm font-semibold text-yellow-800 mb-1">다음 문장 힌트</div>
+                  <div className="text-sm text-yellow-700">
+                    {feedback.hint || (feedback.score >= 80 
+                      ? '잘했어요! 다음 문장도 같은 실력을 발휘해보세요.'
+                      : '다음 문장을 작성할 때는 문법 규칙과 단어의 올바른 사용법을 다시 한번 확인해보세요.')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 오답인 경우 다음 문장 생성 버튼 (정답은 자동 생성됨) */}
+            {feedback.score < 80 && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleGenerateMission}
+                  disabled={isGenerating || energy < 1}
+                  className={`px-6 py-3 font-semibold rounded-lg transition-all ${
+                    energy < 1
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : isGenerating
+                      ? 'bg-indigo-400 text-white cursor-not-allowed'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 shadow-lg hover:shadow-xl transform hover:scale-105'
+                  }`}
+                  title={energy < 1 ? '에너지가 부족합니다 (1 에너지 필요)' : ''}
+                >
+                  {isGenerating ? '생성 중...' : energy < 1 ? '⚡ 에너지 부족' : '다음 문장 다시 시도하기 (⚡ 1)'}
+                </button>
               </div>
             )}
           </div>

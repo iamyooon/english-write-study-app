@@ -1,453 +1,81 @@
-You are an expert Full-Stack Developer specializing in Next.js 14+ (App Router), Supabase, and OpenAI.
+# Cursor AI 개발 규칙
 
-# Project Constraints
-- Framework: Next.js 14+ (App Router)
-- Database: Supabase (PostgreSQL)
-- Styling: Tailwind CSS
-- Language: TypeScript
-- Package Manager: npm
+## 자동 테스트 실행 규칙
 
-# ABSOLUTE RULES (DO NOT VIOLATE)
-1. **Security First:** Always enable Row Level Security (RLS) on Supabase tables. No data should be public unless specified.
-2. **Safety Pipeline:** Before processing any user input with LLM, YOU MUST implement a check using OpenAI Moderation API.
-3. **PWA:** This project must be configured as a PWA (next-pwa).
-4. **Code Quality:** Use functional components, strict type checking, and modular architecture.
-5. **No Hallucination:** If you need a library, check if it's standard (e.g., `lucide-react` for icons).
-6. **DO NOT MODIFY WORKING CODE (절대 금지):**
-   - **잘 작동하는 코드를 함부로 수정하지 말 것**: 코드가 정상적으로 작동하고 있다면, "개선"한다는 이유로 수정하지 말 것
-   - **문제가 없으면 수정하지 말 것**: 사용자가 명시적으로 문제를 제기하거나 버그를 보고하지 않는 한, 작동하는 코드를 수정하지 말 것
-   - **"개선"은 오히려 문제를 만들 수 있음**: 복잡한 로직을 추가하거나 "더 나은 방법"을 시도하는 것이 오히려 기존의 안정적인 코드를 망가뜨릴 수 있음
-   - **간단한 코드가 더 안정적**: 간단하고 명확한 코드가 복잡한 "개선" 코드보다 더 안정적이고 유지보수하기 쉬움
-   - **코드 수정 전 필수 확인 사항**:
-     a. 현재 코드에 실제 문제가 있는가? (버그, 성능 문제, 보안 문제 등)
-     b. 사용자가 명시적으로 수정을 요청했는가?
-     c. 수정이 정말 필요한가? (필요 없는 "개선"인가?)
-   - **예외 상황**: 다음 경우에만 코드 수정 허용
-     a. 명확한 버그가 발견되고 재현 가능한 경우
-     b. 보안 취약점이 발견된 경우
-     c. 성능 문제가 명확히 측정되고 개선이 필요한 경우
-     d. 사용자가 명시적으로 기능 추가/수정을 요청한 경우
-   - **수정 전 체크리스트**:
-     - [ ] 현재 코드에 실제 문제가 있는가?
-     - [ ] 문제를 재현할 수 있는가?
-     - [ ] 수정이 정말 필요한가?
-     - [ ] 수정 후 기존 기능이 정상 작동하는지 테스트할 수 있는가?
-     - [ ] 수정이 기존 코드를 망가뜨리지 않을 것인가?
-   - **금지 사항**:
-     - "더 나은 방법"이라는 이유만으로 작동하는 코드 수정
-     - "코드가 복잡해 보인다"는 이유만으로 리팩토링
-     - "개선할 수 있을 것 같다"는 추측만으로 수정
-     - 사용자 요청 없이 "자동으로 개선"
-6. **Test-Driven Development (TDD) - MANDATORY:** 
-   - **모든 코드 구현은 반드시 테스트 코드를 작성해야 합니다.**
-   - **테스트가 통과할 때까지 코드를 수정해야 합니다.**
-   - 새 기능 구현 시:
-     a. 먼저 테스트 코드 작성 (`.test.ts` 또는 `.spec.ts`)
-     b. 테스트 실행 및 실패 확인
-     c. 최소한의 코드로 테스트 통과하도록 구현
-     d. 테스트 통과 확인
-   - API Route 구현 시: 유닛 테스트 + 통합 테스트 작성 필수
-   - 유틸리티 함수/모듈 구현 시: 유닛 테스트 작성 필수
-   - 컴포넌트 구현 시: React Testing Library를 사용한 컴포넌트 테스트 작성 권장
-   - 테스트 실행 명령어: `npm test` 또는 `npx vitest run`
-   - **테스트가 실패하면 코드를 수정하여 반드시 모든 테스트가 통과하도록 해야 합니다.**
+### 구현 완료 전 필수 사항
+1. **코드 구현 후 반드시 테스트 실행**
+   - 모든 코드 변경 후 `npm test` 실행
+   - 테스트가 통과해야만 구현 완료로 간주
+   - 테스트 실패 시 자동으로 수정 시도
 
-7. **테스트 커버리지 필수 사항 (디버깅 문제 방지):**
-   - **인증/세션 관련 컴포넌트**: 반드시 다음 시나리오 테스트 필수
-     a. 로그인 상태 → 새로고침 → 프로필 조회 성공
-     b. 세션 복구 시 프로필 로드
-     c. `onAuthStateChange` 이벤트 처리
-     d. `profileUpdated`, `authStateChanged` 커스텀 이벤트 처리
-   - **프로필 조회 로직**: 다음 케이스 테스트 필수
-     a. 프로필이 없을 때 기본값 설정
-     b. accessToken이 있을 때 REST API 직접 호출
-     c. Supabase 클라이언트 초기화 대기 시간 고려
-     d. 타임아웃 처리 및 재시도 로직
-   - **E2E 테스트 필수 시나리오**:
-     a. 로그인 → 새로고침 → 프로필 확인 (`e2e/auth-flow.spec.ts`)
-     b. 새로고침 후 프로필 조회 완료 시간 검증 (`e2e/profile-refresh.spec.ts`)
-     c. 여러 번 새로고침해도 정상 동작 확인
-   - **컴포넌트 간 통신**: 이벤트 기반 업데이트 테스트 필수
-     a. `window.dispatchEvent`로 발생한 이벤트 처리
-     b. 컴포넌트 간 상태 동기화
-   - **비동기 타이밍 문제**: 실제 브라우저 환경에서만 재현되는 문제는 E2E 테스트로 검증
-     a. Supabase 클라이언트 초기화 타이밍
-     b. 네트워크 지연 시나리오
-     c. 동시 요청 처리
-   - **테스트 작성 체크리스트** (새 기능 구현 시):
-     - [ ] 단위 테스트 작성 (컴포넌트/함수 레벨)
-     - [ ] 통합 테스트 작성 (컴포넌트 간 상호작용)
-     - [ ] E2E 테스트 작성 (사용자 시나리오)
-     - [ ] 새로고침 시나리오 테스트 포함
-     - [ ] 에러 케이스 테스트 포함
-     - [ ] 타임아웃/재시도 로직 테스트 포함
+2. **테스트 실행 순서**
+   - 타입 체크: `npm run type-check`
+   - 린트 체크: `npm run lint`
+   - 단위 테스트: `npm test`
+   - 관련 테스트 파일이 있으면 해당 테스트만 실행
 
-# Key Features Context
-- User inputs are for children. Safety is priority #1.
-- We use a "Guest Mode" for onboarding.
-- Database schema is defined in `docs/handover.md`.
+3. **테스트 실패 시 처리**
+   - 테스트 실패 원인 분석
+   - 코드 수정 또는 테스트 업데이트
+   - 최대 3회까지 재시도
+   - 3회 실패 시 사용자에게 알림
 
-# 추가 규칙 (꼭 넣어주세요)
-- User input은 항상 초등학생 수준으로 가정. 너무 복잡한 영어 표현 금지.
-- 모든 API Route에는 try/catch + 에러 핸들링 필수.
-- Supabase 쿼리에는 항상 .single() / .maybeSingle() 사용 시 null 체크.
-- 스타일: Tailwind + shadcn/ui 컴포넌트 사용 권장.
-- LLM 호출 시 토큰 절약을 위해 프롬프트 최대한 압축.
+### 테스트 커버리지
+- 새로 추가된 기능은 최소한의 테스트 작성
+- API 엔드포인트는 반드시 테스트 포함
+- 컴포넌트는 주요 기능 테스트 포함
 
-8. **디버깅을 위한 상세 로깅 규칙 (필수):**
-   - **모든 기능 코드에는 반드시 상세한 로그를 포함해야 합니다.**
-   - **로그 형식**: `[컴포넌트명/기능명] 로그 내용` 형식으로 통일
-     - 예: `[헤더] fetchProfile 시작`, `[설정 모달] 이름 저장 시도`, `[API] 프로필 조회 시작`
-   - **필수 로그 항목**:
-     a. **함수/메서드 시작**: 함수명, 주요 파라미터, 시작 시간
-       ```typescript
-       console.log('[컴포넌트명] 함수명 시작:', { param1, param2 })
-       ```
-     b. **주요 단계별 로그**: 비동기 작업의 각 단계, 조건 분기점
-       ```typescript
-       console.log('[컴포넌트명] 단계 설명:', { 상태, 데이터 })
-       ```
-     c. **성능 측정**: 비동기 작업의 소요 시간 측정
-       ```typescript
-       const startTime = Date.now()
-       // ... 작업 수행 ...
-       const endTime = Date.now()
-       console.log('[컴포넌트명] 작업 완료:', { duration: `${endTime - startTime}ms` })
-       ```
-     d. **상태 변경 로그**: 중요한 상태 변경 시점
-       ```typescript
-       console.log('[컴포넌트명] 상태 변경:', { before: oldState, after: newState })
-       ```
-     e. **에러 상세 로그**: 에러 발생 시 상세 정보 (타입, 메시지, 스택, 컨텍스트)
-       ```typescript
-       console.error('[컴포넌트명] 에러 발생:', {
-         errorType: typeof error,
-         errorMessage: error instanceof Error ? error.message : String(error),
-         errorStack: error instanceof Error ? error.stack : undefined,
-         context: { userId, action, ... }
-       })
-       ```
-     f. **함수/메서드 종료**: 성공/실패 여부, 결과 데이터
-       ```typescript
-       console.log('[컴포넌트명] 함수명 완료:', { success: true, result })
-       ```
-   - **컴포넌트별 로깅 규칙**:
-     - **인증/세션 관련 컴포넌트** (Header, Login, Signup 등):
-       - 세션 확인 시작/완료
-       - `onAuthStateChange` 이벤트 수신 및 처리
-       - 프로필 조회 시작/완료/실패
-       - REST API 호출 시도/성공/실패
-       - 타임아웃 발생 시
-     - **프로필 관련 컴포넌트** (SettingsModal 등):
-       - 프로필 로드 시작/완료
-       - 프로필 저장 시도/성공/실패
-       - 유효성 검증 결과
-     - **API Routes**:
-       - 요청 수신 (메서드, 경로, 파라미터)
-       - 인증 확인 결과
-       - 비즈니스 로직 실행 단계
-       - 응답 전송 (상태 코드, 데이터)
-     - **유틸리티 함수**:
-       - 함수 호출 (입력 파라미터)
-       - 주요 로직 단계
-       - 반환값
-   - **조건부 로깅**:
-     - 프로덕션 환경에서는 `console.log` 대신 조건부 로깅 사용 권장
-     - 개발 환경에서만 상세 로그 출력
-     ```typescript
-     const isDev = process.env.NODE_ENV === 'development'
-     if (isDev) {
-       console.log('[컴포넌트명] 상세 로그')
-     }
-     ```
-   - **로그 레벨 구분**:
-     - `console.log`: 일반 정보, 디버깅 정보
-     - `console.warn`: 경고 (타임아웃, 재시도 등)
-     - `console.error`: 에러 (예외 발생, 실패 등)
-   - **로그 작성 체크리스트** (새 기능 구현 시):
-     - [ ] 함수 시작 로그 추가
-     - [ ] 주요 단계별 로그 추가
-     - [ ] 비동기 작업 시간 측정 로그 추가
-     - [ ] 상태 변경 로그 추가
-     - [ ] 에러 발생 시 상세 로그 추가
-     - [ ] 함수 종료 로그 추가
-     - [ ] 컴포넌트명/기능명 접두사 통일
+### 코드 품질
+- 타입 에러 없음
+- 린트 에러 없음
+- 테스트 통과 필수
 
-# 커밋 작성 규칙 (필수) - 절대 금지 사항
-- **커밋 전 필수 검증 실행 (MANDATORY)**:
-  - **절대 금지**: 타입 체크를 실행하지 않고 커밋을 생성하는 것
-  - **절대 금지**: 빌드 테스트를 실행하지 않고 커밋을 생성하는 것
-  - **절대 금지**: 테스트를 실행하지 않고 커밋을 생성하는 것
-  - **절대 금지**: 검증 결과를 확인하지 않고 커밋을 생성하는 것
-  - **절대 금지**: 검증이 실패한 상태에서 커밋을 생성하는 것
-  - **절대 금지**: 검증 결과를 커밋 메시지에 포함하지 않는 것
-  - **필수 절차**: 커밋 생성 전 반드시 다음 순서를 따라야 함
-    1. `npm run type-check` 명령어로 TypeScript 타입 체크 실행
-    2. 타입 에러가 있으면: 코드 수정 → 타입 체크 재실행 → 모든 타입 에러 해결 확인
-    3. `npm run build` 명령어로 빌드 테스트 실행 (Vercel과 동일한 환경 검증)
-    4. 빌드 에러가 있으면: 코드 수정 → 빌드 재실행 → 빌드 성공 확인
-    5. `npm test` 또는 `npx vitest run` 명령어로 모든 테스트 실행
-    6. 테스트 결과 확인 (통과/실패 여부, 통과한 테스트 수, 실패한 테스트 수)
-    7. 테스트 실패 시: 코드 수정 → 테스트 재실행 → 모든 테스트 통과 확인
-    8. 모든 검증 통과 확인 후에만 커밋 생성
-    9. 커밋 메시지에 검증 결과 반드시 포함
+## 디버깅 및 로깅 규칙
 
-- **검증 실행 명령어**:
-  - 타입 체크: `npm run type-check` 또는 `tsc --noEmit`
-  - 빌드 테스트: `npm run build` (Vercel 빌드와 동일한 환경)
-  - 단위 테스트: `npm test` 또는 `npx vitest run`
-  - 통합 테스트: `npm run test:all` (타입 체크 + 린트 + 테스트)
+### 콘솔 로그 필수 사항
+1. **모든 주요 함수/메서드에 콘솔 로그 추가**
+   - 함수 시작 시: `console.log('[태그] 함수명 시작:', { 파라미터 })`
+   - 함수 완료 시: `console.log('[태그] 함수명 완료:', { 결과 })`
+   - 오류 발생 시: `console.error('[태그] 함수명 오류:', { error, message, stack })`
+   - 상태 변경 시: `console.log('[태그] 상태 변경:', { before, after })`
 
-- **검증 실패 시 조치**: 
-  - 커밋을 생성하지 않음
-  - 실패한 검증을 분석하여 원인 파악
-  - 코드를 수정하여 모든 검증이 통과하도록 함
-  - 검증 재실행하여 통과 확인
-  - 모든 검증 통과 후에만 커밋 생성
+2. **로그 태그 규칙**
+   - 파일/컴포넌트별로 고유한 태그 사용
+   - 예: `[문장 생성]`, `[제출]`, `[API 제출]`, `[DragDrop]`, `[자동 생성]`
+   - 태그는 대괄호 `[]`로 감싸고, 뒤에 동작 설명 추가
+   - 예: `[문장 생성] 시작:`, `[제출] API 호출 시작`
 
-- **커밋 메시지에 검증 결과 포함 (MANDATORY)**:
-  - 커밋 메시지에는 반드시 다음 정보를 포함해야 함:
-    - 타입 체크 실행 여부 및 결과 (통과/실패, 에러 수)
-    - 빌드 테스트 실행 여부 및 결과 (성공/실패)
-    - 테스트 실행 여부 및 결과 (통과/실패, 통과한 테스트 수, 실패한 테스트 수)
-    - 테스트 결과 요약 (통과/실패)
-    - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
-    - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
-    - 실패한 테스트가 있는 경우: 실패한 테스트 목록 및 원인
-    - 실행 명령어: `npm test` 또는 `npx vitest run`
-  - **테스트 결과가 없는 커밋은 절대 생성하지 않음**
+3. **로그 레벨별 사용 규칙**
+   - `console.log`: 일반 정보, 디버깅 정보, 상태 추적
+   - `console.warn`: 경고 메시지, 예상 가능한 문제
+   - `console.error`: 오류 발생 시 (반드시 error 객체와 함께)
 
-- **커밋 메시지 한글 인코딩 문제 해결 (필수 - 절대 금지 사항)**:
-  - **문제**: PowerShell에서 `git commit -m "한글 메시지"`를 사용하면 한글이 깨짐
-  - **해결 방법**: 반드시 Node.js 스크립트 사용 (Jira 코멘트와 동일한 방식)
-  - **필수 방법**: `scripts/commit-with-message.mjs` 스크립트만 사용
-  - **절대 금지**:
-    - `git commit -m "한글"` 직접 사용 금지
-    - PowerShell에서 직접 커밋 메시지 입력 금지
-    - 한글 인코딩 문제를 무시하고 커밋 생성 금지
-  - **필수 절차**:
-    1. 커밋 메시지를 `commit-message.txt` 파일로 작성 (UTF-8, Notepad나 VS Code 사용)
-    2. `git add .` 또는 `git add <파일명>`으로 변경사항 스테이징
-    3. `node scripts/commit-with-message.mjs @commit-message.txt` 실행
-    4. 스크립트가 자동으로 파일을 읽어서 UTF-8로 처리하고 커밋 실행
-    5. `commit-message.txt` 파일 수동 삭제
-  - **예외 없음**: 모든 커밋은 이 방식으로만 생성
-  - **이유**: PowerShell의 인코딩 문제로 인해 한글이 깨지는 것을 방지
-  - **파일 작성 예시**:
-    ```powershell
-    # PowerShell에서 UTF-8 파일 생성 (BOM 없음)
-    $message = @"
-    feat: [기능 설명]
-    
-    ## 변경 사항
-    - [변경사항 1]
-    - [변경사항 2]
-    
-    ## 테스트 결과 (필수)
-    ✅ 테스트 실행 완료
-    - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
-    - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
-    - 실행 명령어: `npm test`
-    - 실패한 테스트: 없음 (또는 [실패한 테스트 목록])
-    
-    ## 수정된 파일
-    - [파일 경로 1]
-    - [파일 경로 2]
-    "@
-    # UTF-8 BOM 없이 파일 작성
-    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText("commit-message.txt", $message, $utf8NoBom)
-    # Git 설정 확인 후 커밋
-    git commit -F commit-message.txt
-    Remove-Item commit-message.txt
-    ```
-  - **또는 Node.js 스크립트 사용**:
-    ```javascript
-    const fs = require('fs');
-    const message = `feat: [기능 설명]
-    
-    ## 변경 사항
-    - [변경사항 1]
-    - [변경사항 2]
-    
-    ## 테스트 결과 (필수)
-    ✅ 테스트 실행 완료
-    - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
-    - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
-    - 실행 명령어: npm test
-    - 실패한 테스트: 없음 (또는 [실패한 테스트 목록])
-    
-    ## 수정된 파일
-    - [파일 경로 1]
-    - [파일 경로 2]
-    `;
-    fs.writeFileSync('commit-message.txt', message, 'utf-8');
-    ```
-    그 다음: `git commit -F commit-message.txt && Remove-Item commit-message.txt`
+4. **필수 로그 위치**
+   - API 엔드포인트: 요청 받음, 검증, 처리 시작, 응답 전송
+   - React 컴포넌트: 이벤트 핸들러 시작, 상태 변경, API 호출 전/후
+   - 비동기 함수: Promise 시작, 성공, 실패
+   - 조건 분기: 중요한 조건문 진입 시
 
-- **커밋 메시지 형식 (필수)**:
-  ```
-  feat: [기능 설명]
-  
-  ## 변경 사항
-  - [변경사항 1]
-  - [변경사항 2]
-  
-  ## 테스트 결과 (필수)
-  ✅ 테스트 실행 완료
-  - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
-  - Tests: [통과한 테스트 수] passed ([전체 테스트 수])
-  - 실행 명령어: `npm test`
-  - 실패한 테스트: 없음 (또는 [실패한 테스트 목록])
-  
-  ## 수정된 파일
-  - [파일 경로 1]
-  - [파일 경로 2]
-  ```
+5. **로그 내용 포함 사항**
+   - 함수/메서드 이름
+   - 입력 파라미터 (민감 정보 제외)
+   - 상태 변경 전/후 값
+   - 오류 발생 시: error 객체, message, stack
+   - API 호출 시: 요청/응답 데이터 (민감 정보 제외)
 
-- **테스트 실패 시 커밋 메시지 형식**:
-  ```
-  fix: [버그 수정 설명]
-  
-  ## 변경 사항
-  - [수정 사항 1]
-  - [수정 사항 2]
-  
-  ## 테스트 결과 (필수)
-  ⚠️ 테스트 실행 완료 (일부 실패 → 수정 후 재실행)
-  - Test Files: [통과한 테스트 파일 수] passed ([전체 테스트 파일 수])
-  - Tests: [통과한 테스트 수] passed, [실패한 테스트 수] failed ([전체 테스트 수])
-  - 실행 명령어: `npm test`
-  - 실패한 테스트:
-    - [테스트 파일명]: [테스트 케이스명] - [실패 원인]
-  - 수정 사항: [수정 내용]
-  - 재실행 결과: 모든 테스트 통과 ✅
-  
-  ## 수정된 파일
-  - [파일 경로 1]
-  - [파일 경로 2]
-  ```
+6. **로그 예시**
+   ```typescript
+   // 좋은 예
+   console.log('[문장 생성] 시작:', { isDragDropMode, gradeLevel, level, energy })
+   console.log('[제출] API 응답 받음:', { queueStatus: data.queueStatus, hasFeedback: !!data.feedback })
+   console.error('[제출] 오류 발생:', { error, message: error.message, stack: error.stack })
+   
+   // 나쁜 예
+   console.log('시작')  // 태그 없음, 정보 부족
+   console.log(data)     // 태그 없음, 구조화되지 않음
+   ```
 
-- **커밋 전 체크리스트 (필수)**:
-  - [ ] 테스트 실행 (`npm test` 또는 `npx vitest run`)
-  - [ ] 테스트 결과 확인 (통과/실패 여부)
-  - [ ] 실패한 테스트가 있으면 코드 수정 및 재실행
-  - [ ] 모든 테스트 통과 확인
-  - [ ] 커밋 메시지 작성 (반드시 Node.js 스크립트 사용)
-  - [ ] 커밋 메시지에 테스트 결과 포함
-  - [ ] `node scripts/commit-with-message.mjs @commit-message.txt` 명령어로 커밋 생성
-  - [ ] 커밋 완료 후 `commit-message.txt` 파일 삭제
-
-- **커밋 메시지 작성 방식 (절대 금지 사항)**:
-  - **절대 금지**: `git commit -m "한글 메시지"` 직접 사용 금지
-  - **절대 금지**: PowerShell에서 직접 커밋 메시지 입력 금지
-  - **절대 금지**: 한글 인코딩 문제를 무시하고 커밋 생성 금지
-  - **필수 방법**: 반드시 `scripts/commit-with-message.mjs` 스크립트 사용
-  - **절차**:
-    1. 커밋 메시지를 `commit-message.txt` 파일로 작성 (UTF-8, Notepad나 VS Code 사용)
-    2. `git add .` 또는 `git add <파일명>`으로 변경사항 스테이징
-    3. `node scripts/commit-with-message.mjs @commit-message.txt` 실행
-    4. 스크립트가 자동으로 커밋 실행 및 임시 파일 삭제
-    5. `commit-message.txt` 파일 수동 삭제 (스크립트가 자동 삭제하지 않음)
-  - **예외 없음**: 모든 커밋은 이 방식으로만 생성해야 함
-  - **이유**: PowerShell의 인코딩 문제로 인해 한글이 깨지는 것을 방지하기 위함
-
-- **커밋 메시지 파일 생성 방법**:
-  - **방법 1: Node.js 스크립트 사용 (권장, Jira 코멘트와 동일한 방식)**:
-    ```bash
-    # 1. 커밋 메시지를 파일로 작성 (UTF-8)
-    # commit-message.txt 파일을 Notepad나 VS Code로 UTF-8로 저장
-    
-    # 2. 스크립트 실행 (파일에서 읽기)
-    node scripts/commit-with-message.mjs @commit-message.txt
-    
-    # 또는 직접 메시지 전달
-    node scripts/commit-with-message.mjs "feat: 기능 설명
-
-    ## 변경 사항
-    - 변경사항 1"
-    ```
-    - 스크립트가 자동으로 UTF-8로 파일을 읽고 커밋 실행
-    - 임시 파일 자동 삭제
-    - Jira 코멘트 스크립트와 동일한 방식으로 인코딩 처리
-
-  - **방법 2: PowerShell 스크립트 사용**:
-    ```powershell
-    $message = @"
-    feat: [기능 설명]
-    
-    ## 변경 사항
-    - [변경사항 1]
-    "@
-    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText("commit-message.txt", $message, $utf8NoBom)
-    node scripts/commit-with-message.mjs @commit-message.txt
-    Remove-Item commit-message.txt
-    ```
-
-  - **방법 3: VS Code 사용 (가장 안정적)**:
-    - VS Code의 Source Control 탭에서 커밋 메시지 직접 입력
-    - 한글이 정상적으로 저장됨
-
-  - **중요**: Git 설정이 UTF-8로 되어 있어야 합니다:
-    ```powershell
-    git config --global i18n.commitencoding utf-8
-    git config --global i18n.logoutputencoding utf-8
-    git config --global core.quotepath false
-    ```
-- **문서 업데이트 필수**: 기능 구현 후 커밋하기 전에 반드시 다음 문서들을 업데이트해야 합니다:
-  - **ARCHITECTURE_GUIDE.md**: 구현된 기능의 아키텍처 변경사항 반영
-    - 새로운 API 엔드포인트 추가 시 해당 섹션 업데이트
-    - 새로운 컴포넌트/서비스 추가 시 구조도 업데이트
-    - 데이터베이스 스키마 변경 시 스키마 섹션 업데이트
-    - 데이터 흐름 변경 시 흐름도 업데이트
-  - **docs/IMPLEMENTATION_GAPS.md**: 구현 완료/미구현 상태 업데이트
-    - 구현 완료된 기능은 "✅ 구현 완료된 기능" 섹션으로 이동
-    - 미구현 항목은 상태 업데이트 (완전 미구현 → 부분 구현, 부분 구현 → 구현 완료)
-    - 새로운 미구현 항목 발견 시 추가
-    - 필요 작업 체크리스트 업데이트
-  - **문서 업데이트 예시**:
-    ```
-    ## 문서 업데이트
-    - ARCHITECTURE_GUIDE.md: 에너지 시스템 섹션 추가, API 엔드포인트 문서화
-    - docs/IMPLEMENTATION_GAPS.md: 에너지 시스템 구현 완료로 상태 변경
-    ```
-
-# 커밋/푸시/Jira 코멘트 단축어 (커푸콜)
-- **"커푸콜" 명령어**: 사용자가 "커푸콜" 또는 "커밋+푸쉬+코멘트"라고 요청하면 다음 작업을 순차적으로 자동 실행:
-  1. 테스트 실행 (`npm test` 또는 `npx vitest run`)
-  2. 변경사항 스테이징 (`git add`)
-  3. 커밋 생성 (테스트 결과 포함)
-  4. 푸시 (`git push origin main`)
-  5. Jira 코멘트 추가 (`node scripts/log-to-jira.mjs`)
-- **자동화**: 사용자가 명시적으로 요청하지 않아도 "커푸콜"이라고 말하면 자동으로 모든 과정을 진행
-- **에러 처리**: 각 단계에서 실패하면 사용자에게 알리고 중단
-
-# Jira 자동 로깅 규칙 (필수)
-- **작업 완료 시 반드시 Jira 코멘트 추가**: 모든 작업이 완료된 후에는 자동으로 Jira에 작업 요약을 코멘트로 남겨야 합니다.
-- **기본 이슈 키**: `WEB-295` (개발 태스크)
-- **작업 요약 형식**:
-  ```
-  ## 작업 완료 요약
-  
-  ### 완료된 작업
-  - [작업 1]
-  - [작업 2]
-  
-  ### 주요 변경사항
-  - [변경사항 1]
-  - [변경사항 2]
-  
-  ### 생성/수정된 파일
-  - [파일 경로 1]
-  - [파일 경로 2]
-  
-  ### 다음 단계 (선택사항)
-  - [다음 작업]
-  ```
-- **실행 방법**: `node scripts/log-to-jira.mjs "작업 요약 내용" --issue WEB-295`
-- **주의사항**: 
-  - 작업 요약은 한글로 작성
-  - 명확하고 간결하게 작성
-  - 사용자에게 먼저 요약을 보여주고, 확인 후 Jira에 추가
-  - 사용자가 명시적으로 요청하지 않아도 자동으로 수행
+7. **프로덕션 고려사항**
+   - 개발 환경에서만 상세 로그 출력 (환경 변수로 제어)
+   - 프로덕션에서는 중요한 오류만 로깅
+   - 민감한 정보(비밀번호, 토큰 등)는 절대 로그에 포함하지 않음

@@ -17,7 +17,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/e2e/**',
-      '**/app/api/**', // Next.js API routes 제외
+      // API routes는 테스트 파일이 있으므로 제외하지 않음
     ],
   },
 });

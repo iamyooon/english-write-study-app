@@ -69,8 +69,11 @@ export default function PlacementTestPage() {
       // 타입 단언 (Supabase 타입 추론 문제 해결)
       const profileData = profile as { grade?: number; placement_level?: number } | null
 
-      // 이미 Placement Test를 완료한 경우 Writing 페이지로 리다이렉트
-      if (profileData?.placement_level) {
+      // URL 파라미터에서 재시도 옵션 확인
+      const retake = urlParams.get('retake') === 'true'
+
+      // 이미 Placement Test를 완료한 경우, 재시도 옵션이 없으면 Writing 페이지로 리다이렉트
+      if (profileData?.placement_level && !retake) {
         router.push('/writing')
         return
       }

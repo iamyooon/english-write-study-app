@@ -118,17 +118,20 @@ export async function POST(request: Request) {
     // AI 피드백 생성
     let aiFeedback = null
     if (queueStatus === 'completed') {
+      console.log('[API 제출] 평가 시작:', { missionText, userInput, gradeLevel })
       const feedbackPrompt = `다음 한글 문장을 영어로 번역한 결과를 평가해주세요.
 
 원문 (한글): ${missionText}
 학생이 작성한 영어: ${userInput}
 수준: ${gradeLevel === 'elementary_low' ? '초등 저학년' : '초등 고학년'}
 
-다음 형식으로 JSON 응답:
+**중요: 반드시 다음 형식으로 JSON 응답을 제공하세요. 모든 필드는 필수입니다.**
+
 {
   "score": 0-100 점수,
   "feedback": "친절하고 격려하는 피드백 메시지",
   "corrected": "교정된 영어 문장 (필요시)",
+  "hint": "다음 문장을 작성할 때 도움이 되는 구체적인 힌트를 반드시 제공하세요. 정답이든 오답이든 항상 힌트를 제공해야 합니다. 예: '다음 문장에서는 과거형 동사(was, went, played 등)를 사용해보세요' 또는 '이 문장에서 주의할 점은 주어와 동사의 일치입니다'",
   "errors": [
     {
       "type": "grammar|spelling|vocabulary",
@@ -138,7 +141,9 @@ export async function POST(request: Request) {
     }
   ],
   "suggestions": ["개선 제안 1", "개선 제안 2"]
-}`
+}
+
+**힌트(hint) 필드는 반드시 포함되어야 하며, 빈 문자열이 아니어야 합니다.**`
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o',
@@ -159,22 +164,39 @@ export async function POST(request: Request) {
       })
 
       const feedbackText = completion.choices[0]?.message?.content
+      console.log('[API 제출] AI 응답 받음:', { hasContent: !!feedbackText, contentLength: feedbackText?.length })
+      
       if (feedbackText) {
-        aiFeedback = JSON.parse(feedbackText)
+        try {
+          aiFeedback = JSON.parse(feedbackText)
+          console.log('[API 제출] 피드백 파싱 완료:', { score: aiFeedback?.score, hasHint: !!aiFeedback?.hint })
+        } catch (parseError) {
+          console.error('[API 제출] JSON 파싱 오류:', parseError)
+        }
+      }
+      
+      // aiFeedback이 없거나 힌트가 없는 경우 항상 힌트 생성
+      if (!aiFeedback) {
+        console.warn('[API 제출] aiFeedback 없음, 기본값 생성')
+        aiFeedback = { score: 0, feedback: '평가가 완료되었습니다.' }
+      }
+      
+      // 힌트가 없거나 빈 문자열인 경우 기본 힌트 생성
+      if (!aiFeedback.hint || aiFeedback.hint.trim() === '') {
+        const score = aiFeedback.score || 0
+        console.log('[API 제출] 힌트 없음, 기본 힌트 생성:', { score })
+        if (score >= 80) {
+          aiFeedback.hint = '잘했어요! 다음 문장도 같은 실력을 발휘해보세요. 문법과 단어 선택에 주의하면서 작성해보세요.'
+        } else {
+          aiFeedback.hint = '다음 문장을 작성할 때는 문법 규칙과 단어의 올바른 사용법을 다시 한번 확인해보세요. 천천히 생각하면서 작성하면 더 좋은 결과를 얻을 수 있어요!'
+        }
+      } else {
+        console.log('[API 제출] 힌트 있음:', { hint: aiFeedback.hint.substring(0, 50) + '...' })
       }
     }
 
-    // 에너지 생산 (작성 문장당 +10) - 미션 완료 시에만
+    // 에너지 증가 로직 제거 (학습 시 에너지는 감소만 함)
     let energyGained = 0
-    if (queueStatus === 'completed') {
-      try {
-        await produceEnergy(user.id, 10)
-        energyGained = 10
-      } catch (error) {
-        console.error('에너지 생산 실패:', error)
-        // 에너지 생산 실패는 치명적이지 않으므로 로그만 남기고 계속 진행
-      }
-    }
 
     // study_logs에 저장
     // 참고: 실제 스키마에 맞춰 필드 제한 (queue_position, grade_level, level, moderation_passed, moderation_details는 스키마에 없음)
@@ -200,6 +222,15 @@ export async function POST(request: Request) {
       )
     }
 
+    console.log('[API 제출] 응답 전송:', { 
+      success: true, 
+      hasStudyLog: !!studyLog, 
+      feedbackScore: aiFeedback?.score, 
+      hasHint: !!aiFeedback?.hint,
+      queueStatus,
+      energyGained 
+    })
+    
     return NextResponse.json({
       success: true,
       studyLog,
