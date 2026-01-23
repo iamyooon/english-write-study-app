@@ -7,9 +7,15 @@
 - ✅ Supabase 연동 (클라이언트/서버 유틸리티)
 - ✅ OpenAI API 연동 (GPT-4o)
 - ✅ 온보딩 플로우 (Guest Mode + 학년 선택)
+- ✅ Placement Test 시스템 (`/api/placement/submit`)
 - ✅ 기본 미션 생성 (`/api/study/generate-mission`)
+- ✅ Drag & Drop 미션 생성 (`/api/study/generate-drag-drop-mission`) - 레벨 1-2
 - ✅ Writing 제출 및 AI 피드백 (`/api/study/submit`)
+- ✅ Drag & Drop 제출 (`/api/study/drag-drop-submit`)
 - ✅ 3중 안전 필터링 (클라이언트 금칙어 + OpenAI Moderation)
+- ✅ 힌트 시스템 (정답/오답 모두 힌트 제공)
+- ✅ 자동 다음 문장 생성 (정답 시)
+- ✅ 에너지 시스템 (학습 시 감소, 미션 생성 1 에너지 소모)
 - ✅ `next-pwa` 패키지 설치 (설정 미완료)
 
 ### 2. 데이터베이스
@@ -32,17 +38,19 @@
 - 결과 저장: `profiles.placement_level` 업데이트
 - UI: 진행바 + 격려 문구 + 결과 애니메이션
 
-**필요 작업:**
-- [ ] `app/api/placement/submit/route.ts` 생성
-- [ ] `app/placement/page.tsx` 생성 (Placement Test UI)
-- [ ] 온보딩 플로우에 Placement Test 단계 추가
-- [ ] `profiles` 테이블에 `placement_level` 컬럼 추가 (스키마 업데이트 필요)
+**구현 완료:**
+- ✅ `app/api/placement/submit/route.ts` 생성
+- ✅ `app/placement/page.tsx` 생성 (Placement Test UI)
+- ✅ 온보딩 플로우에 Placement Test 단계 추가
+- ✅ `profiles` 테이블에 `placement_level` 컬럼 추가
+- ✅ 기존 레벨이 있으면 자동 스킵 로직
+- ✅ 재시도 옵션 제공 (`?retake=true`)
 
-**현재 상태:** ❌ 미구현
+**현재 상태:** ✅ 구현 완료
 
 ---
 
-#### 2. 에너지 시스템 (완전 구현)
+#### 2. 에너지 시스템
 **설계 요구사항:**
 - 매일 100 충전 (자정 기준)
 - 미션 1회당 100 소비
@@ -50,15 +58,19 @@
 - 부족 시 카운트다운 UI
 - 시각화: 홈 화면 에너지 게이지
 
+**구현 완료:**
+- ✅ 미션 생성 시 에너지 소비 (1 에너지)
+- ✅ 에너지 부족 시 에러 메시지 표시
+- ✅ 헤더에 에너지 표시 (실시간 업데이트)
+
 **필요 작업:**
 - [ ] `profiles` 테이블에 `energy_last_charged` 컬럼 추가
 - [ ] 자정 에너지 자동 충전 로직 (Cron Job 또는 Supabase Edge Function)
-- [ ] 미션 제출 시 에너지 소비 로직 (`/api/study/submit`에 추가)
-- [ ] 작성 문장당 에너지 생산 로직
+- [ ] 작성 문장당 에너지 생산 로직 (현재는 감소만)
 - [ ] 에너지 부족 시 카운트다운 UI
 - [ ] 홈 화면 에너지 게이지 컴포넌트
 
-**현재 상태:** ⚠️ 부분 구현 (에너지 필드는 있으나 자동 충전/소비 로직 없음)
+**현재 상태:** ⚠️ 부분 구현 (미션 생성 시 소비만 구현, 자동 충전/생산 로직 없음)
 
 ---
 
@@ -68,6 +80,13 @@
 - 피드백: Level 1에 한정 (긍정 중심 프롬프트)
 - Free 제한: 피드백 3회 → 초과 시 queued 상태로 study_logs 저장
 
+**구현 완료:**
+- ✅ Drag & Drop 미션 (레벨 1-2): 클릭 기반 단어 선택
+- ✅ 키보드 입력 미션 (레벨 3-6): 기존 방식 유지
+- ✅ 힌트 시스템: 정답/오답 모두 힌트 제공
+- ✅ 자동 다음 문장 생성: 정답 시 2초 후 자동 진행
+- ✅ 피드백 UI: 평가 결과, 점수, 힌트 표시
+
 **필요 작업:**
 - [ ] 어휘 노출 UI (미션 생성 시 어휘 목록 표시)
 - [ ] 예시 문장 표시 UI
@@ -75,7 +94,7 @@
 - [ ] Free 제한 로직 수정 (현재 5회 → 3회로 변경)
 - [ ] Queue 상태 처리 로직 개선
 
-**현재 상태:** ⚠️ 부분 구현 (기본 흐름은 있으나 어휘/예시 노출 없음)
+**현재 상태:** ⚠️ 부분 구현 (기본 흐름 + 힌트 시스템 완료, 어휘/예시 노출 없음)
 
 ---
 

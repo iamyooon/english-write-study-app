@@ -16,6 +16,9 @@
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run type-check && npm run lint && npm test",
     "precommit": "npm run type-check && npm run lint && npm test",
+    "pre-commit": "node scripts/pre-commit.ps1 || node scripts/pre-commit.sh",
+    "update-docs": "node scripts/update-docs.js",
+    "commit": "node scripts/commit-with-tests.ps1 || bash scripts/commit-with-tests.sh",
     "types:generate": "npx supabase gen types typescript --project-id ilgwjhtjdaghgwapwcki > types/database.ts",
     "types:check": "tsc --noEmit"
   },

@@ -6,9 +6,16 @@
 
 - **게스트 모드**: 익명 계정으로 즉시 시작 가능
 - **Placement Test**: GPT-4o 기반 실력 평가 및 레벨 추천 (1-10)
+  - 기존 레벨이 있으면 자동 스킵 (재시도 옵션 제공)
+- **레벨별 맞춤 학습**:
+  - **레벨 1-2**: Drag & Drop 미션 (클릭 기반 단어 선택)
+  - **레벨 3-6**: 키보드 입력 방식
+  - 초등 저학년/고학년 수준에 맞는 문장 생성
 - **AI 피드백**: 영어 문장 작성 후 즉시 AI 평가 및 교정
+  - 힌트 시스템: 정답/오답 모두 다음 문장 학습 힌트 제공
+  - 정답 시 자동으로 다음 문장 생성 (2초 후)
 - **3중 안전 필터링**: 클라이언트 금칙어 필터 → OpenAI Moderation → AI Persona 검증
-- **레벨별 맞춤 학습**: 초등 저학년/고학년 수준에 맞는 문장 생성
+- **에너지 시스템**: 학습 시 에너지 감소 (미션 생성 1 에너지 소모)
 - **학습 기록**: 모든 작성 내용과 피드백을 데이터베이스에 저장
 
 ## 🛠 기술 스택
@@ -52,8 +59,10 @@ english-write-study-app/
 │   │   │   ├── questions/        # Placement Test 문항 생성
 │   │   │   └── submit/           # Placement Test 결과 평가
 │   │   └── study/
-│   │       ├── generate-mission/  # 한글 문장 생성
-│   │       └── submit/           # 영어 문장 제출 및 피드백
+│   │       ├── generate-mission/         # 한글 문장 생성 (레벨 3-6)
+│   │       ├── generate-drag-drop-mission/  # Drag & Drop 미션 생성 (레벨 1-2)
+│   │       ├── submit/                  # 영어 문장 제출 및 피드백
+│   │       └── drag-drop-submit/        # Drag & Drop 미션 제출
 │   ├── onboarding/               # 온보딩 페이지 (학년 선택)
 │   ├── placement/                # Placement Test 페이지
 │   ├── writing/                  # 영어 문장 쓰기 페이지
@@ -83,7 +92,10 @@ english-write-study-app/
 │       ├── 001_initial_schema.sql
 │       ├── 002_rls_policies.sql
 │       └── 003_add_placement_level.sql
-├── components/                   # 공통 컴포넌트 (레거시)
+├── components/                   # 공통 컴포넌트
+│   ├── DragDropMission.tsx      # Drag & Drop 미션 컴포넌트
+│   ├── Header.tsx               # 헤더 컴포넌트
+│   └── ...
 ├── services/                     # 서비스 레이어 (레거시)
 ├── e2e/                          # E2E 테스트
 ├── scripts/                      # 유틸리티 스크립트
@@ -195,6 +207,18 @@ npm run test:e2e
 # UI 모드로 실행
 npm run test:e2e:ui
 ```
+
+### 커밋 전 자동 검사
+
+```bash
+# 타입 체크 + 린트 + 테스트 + 문서 업데이트
+npm run pre-commit
+
+# 문서만 업데이트
+npm run update-docs
+```
+
+**참고**: 커밋 전에 `npm run pre-commit`을 실행하면 자동으로 테스트를 실행하고 문서를 업데이트합니다.
 
 ## 📚 주요 문서
 
