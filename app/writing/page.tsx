@@ -52,29 +52,43 @@ export default function WritingPage() {
   const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // URL 파라미터에서 초기 학년 확인 (서버 사이드 렌더링 방지)
-  const getInitialGrade = () => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      // grade 또는 recommended_grade 파라미터 확인
-      const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
-      if (gradeParam) {
-        const gradeValue = parseInt(gradeParam, 10)
-        if (gradeValue >= 1 && gradeValue <= 6) {
-          return gradeValue
-        }
+  const [grade, setGrade] = useState<number | null>(null) // 1-6학년, null이면 학년 선택 안됨
+  const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(null) // grade에 따라 자동 설정
+  const [energy, setEnergy] = useState<number>(5) // 기본값 5
+  const [isInitialized, setIsInitialized] = useState<boolean>(false) // 초기화 완료 여부
+  const [hasCheckedUrlParams, setHasCheckedUrlParams] = useState<boolean>(false) // URL 파라미터 확인 완료 여부
+
+  // 초기 마운트 시 URL 파라미터에서 학년 즉시 확인 및 설정
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
+    
+    console.log('[Writing] 초기 마운트 - URL 파라미터 확인:', {
+      gradeParam,
+      urlGrade: urlParams.get('grade'),
+      urlRecommendedGrade: urlParams.get('recommended_grade'),
+      pathname: window.location.pathname,
+      search: window.location.search
+    })
+    
+    if (gradeParam) {
+      const gradeValue = parseInt(gradeParam, 10)
+      if (!isNaN(gradeValue) && gradeValue >= 1 && gradeValue <= 6) {
+        console.log('[Writing] 초기 마운트 - 학년 즉시 설정:', gradeValue)
+        setGrade(gradeValue)
+        setGradeLevel(gradeValue <= 3 ? 'elementary_low' : 'elementary_high')
+        setIsInitialized(true)
+        setHasCheckedUrlParams(true)
+        return // 초기화 완료, 나머지 useEffect는 실행하지 않음
       }
     }
-    return null
-  }
-
-  const initialGrade = getInitialGrade()
-  const [grade, setGrade] = useState<number | null>(initialGrade) // 1-6학년, null이면 학년 선택 안됨
-  const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(
-    initialGrade ? (initialGrade <= 3 ? 'elementary_low' : 'elementary_high') : null
-  ) // grade에 따라 자동 설정
-  const [energy, setEnergy] = useState<number>(5) // 기본값 5
-  const [isInitialized, setIsInitialized] = useState<boolean>(!!initialGrade) // 초기화 완료 여부
+    
+    // URL 파라미터에 학년이 없으면 세션 확인 필요
+    console.log('[Writing] 초기 마운트 - URL 파라미터에 학년 없음, 세션 확인 필요')
+    setHasCheckedUrlParams(true) // URL 파라미터 확인 완료 표시
+  }, []) // 빈 의존성 배열 - 마운트 시 한 번만 실행
 
   // 학년에 따라 gradeLevel 자동 설정
   useEffect(() => {
@@ -86,8 +100,38 @@ export default function WritingPage() {
   // 저학년(1-3학년)은 Drag & Drop, 고학년(4-6학년)은 키보드 입력
   const isDragDropMode = grade !== null && grade <= 3
 
-  // 사용자 세션 확인 및 placement_level 가져오기
+  // 사용자 세션 확인 및 에너지 정보 가져오기 (학년이 이미 설정된 경우)
   useEffect(() => {
+    // 학년이 이미 설정되었으면 에너지 정보만 가져오기
+    if (isInitialized && grade !== null) {
+      const fetchEnergy = async () => {
+        const supabase = createClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+          router.replace('/onboarding')
+          return
+        }
+
+        // 프로필에서 에너지 정보만 가져오기
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('energy')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        
+        const profileData = profile as { energy?: number } | null
+        if (profileData && profileData.energy !== undefined) {
+          setEnergy(profileData.energy)
+        }
+      }
+      fetchEnergy()
+      return
+    }
+
+    // 학년이 아직 설정되지 않았으면 세션 확인 및 프로필에서 학년 가져오기
     const checkSession = async () => {
       const supabase = createClient()
       const {
@@ -95,23 +139,21 @@ export default function WritingPage() {
       } = await supabase.auth.getSession()
 
       if (!session) {
-        // 세션이 없으면 온보딩으로 즉시 리다이렉트 (화면 렌더링 없이)
+        console.log('[Writing] 세션 없음, 온보딩으로 리다이렉트')
         router.replace('/onboarding')
         return
       }
 
-      // URL 파라미터에서 학년 확인 (이미 초기 상태에서 설정되었을 수 있음)
+      // URL 파라미터에서 학년 확인 (초기 마운트에서 설정되지 않았을 경우)
       const urlParams = new URLSearchParams(window.location.search)
       const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
       
       if (gradeParam) {
         const gradeValue = parseInt(gradeParam, 10)
-        if (gradeValue >= 1 && gradeValue <= 6) {
-          if (grade === null) {
-            // 초기 상태에서 설정되지 않았을 경우에만 설정
-            setGrade(gradeValue)
-            setGradeLevel(gradeValue <= 3 ? 'elementary_low' : 'elementary_high')
-          }
+        if (!isNaN(gradeValue) && gradeValue >= 1 && gradeValue <= 6) {
+          console.log('[Writing] useEffect - URL 파라미터에서 학년 확인:', gradeValue)
+          setGrade(gradeValue)
+          setGradeLevel(gradeValue <= 3 ? 'elementary_low' : 'elementary_high')
           setIsInitialized(true)
           
           // 프로필에서 에너지 정보만 가져오기
@@ -136,15 +178,16 @@ export default function WritingPage() {
         .eq('id', session.user.id)
         .maybeSingle()
 
-      // 타입 단언 (Supabase 타입 추론 문제 해결)
       const profileData = profile as { grade?: number; energy?: number } | null
 
-      // 학년이 없으면 즉시 온보딩으로 리다이렉트 (화면 렌더링 없이)
+      // 학년이 없으면 즉시 온보딩으로 리다이렉트
       if (!profileData || !profileData.grade || profileData.grade < 1 || profileData.grade > 6) {
+        console.log('[Writing] 프로필에 학년 없음, 온보딩으로 리다이렉트')
         router.replace('/onboarding')
         return
       }
 
+      console.log('[Writing] 프로필에서 학년 확인:', profileData.grade)
       setGrade(profileData.grade)
       setGradeLevel(profileData.grade <= 3 ? 'elementary_low' : 'elementary_high')
       setIsInitialized(true)
@@ -154,8 +197,9 @@ export default function WritingPage() {
         setEnergy(profileData.energy)
       }
     }
+    
     checkSession()
-  }, [])
+  }, [isInitialized, grade, router])
 
   // 자동 문장 생성 효과
   useEffect(() => {
@@ -436,16 +480,32 @@ export default function WritingPage() {
   }
 
   // 학년이 선택되지 않았으면 온보딩 페이지로 즉시 리다이렉트 (화면 렌더링 없이)
+  // URL 파라미터 확인이 완료된 후에만 리다이렉트 체크
   useEffect(() => {
+    // URL 파라미터 확인이 완료되지 않았으면 대기
+    if (!hasCheckedUrlParams) {
+      console.log('[Writing] URL 파라미터 확인 대기 중...')
+      return
+    }
+    
+    // URL 파라미터 확인 완료 후, 초기화되지 않았고 학년이 없으면 리다이렉트
     if (!isInitialized && grade === null) {
+      console.log('[Writing] 초기화되지 않음, 온보딩으로 리다이렉트:', { 
+        isInitialized, 
+        grade,
+        hasCheckedUrlParams 
+      })
       router.replace('/onboarding')
     }
-  }, [grade, isInitialized, router])
+  }, [grade, isInitialized, hasCheckedUrlParams, router])
 
   // 초기화가 완료되지 않았거나 학년이 없으면 아무것도 렌더링하지 않음 (리다이렉트 중)
   if (!isInitialized || grade === null) {
+    console.log('[Writing] 렌더링 차단:', { isInitialized, grade })
     return null
   }
+
+  console.log('[Writing] 렌더링 시작:', { grade, gradeLevel, isDragDropMode })
 
   // Drag & Drop 모드 렌더링 (저학년 1-3학년)
   if (isDragDropMode) {
