@@ -3,7 +3,7 @@
  * 
  * POST /api/study/generate-drag-drop-mission
  * 
- * 레벨 1~2용 Drag & Drop 미션을 생성합니다.
+ * 저학년(1-3학년)용 Drag & Drop 미션을 생성합니다.
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -13,13 +13,13 @@ import { z } from 'zod'
 
 const generateDragDropMissionSchema = z.object({
   gradeLevel: z.enum(['elementary_low', 'elementary_high']),
-  level: z.number().min(1).max(2).default(1), // 레벨 1~2만 지원
+  grade: z.number().min(1).max(3), // 저학년(1-3학년)만 지원
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { gradeLevel, level } = generateDragDropMissionSchema.parse(body)
+    const { gradeLevel, grade } = generateDragDropMissionSchema.parse(body)
 
     // 사용자 인증 확인
     const supabase = await createClient()
@@ -64,37 +64,32 @@ export async function POST(request: Request) {
       )
     }
 
-    // 수준에 맞는 프롬프트 생성
-    const levelDescription =
-      gradeLevel === 'elementary_low'
-        ? '초등학교 저학년(1-3학년) 수준의 매우 간단한 문장'
-        : '초등학교 고학년(4-6학년) 수준의 간단한 문장'
-
     const prompt = `다음 조건에 맞는 Drag & Drop 미션을 생성해주세요:
-- 대상: ${levelDescription}
-- 난이도 레벨: ${level}/2
+- 대상: ${grade}학년 수준의 초등학생
+- 학습 방식: Drag & Drop (클릭 기반 단어 선택)
 - 주제: 일상생활, 가족, 학교, 취미 등 초등학생에게 친숙한 주제
-- 문장 길이: ${gradeLevel === 'elementary_low' ? '3-5단어' : '4-6단어'}
-- 빈칸 개수: 1개 (레벨 1) 또는 2개 (레벨 2)
+- 문장 길이: ${grade === 1 ? '3-4단어' : grade === 2 ? '4-5단어' : '5-6단어'}
+- 빈칸 개수: 1개 (매우 간단한 구조)
 
 다음 JSON 형식으로 응답해주세요:
 {
   "korean": "한글 미션 문장",
   "template": "영어 문장 템플릿 (빈칸은 ___로 표시)",
-  "blanks": 빈칸_개수,
+  "blanks": 1,
   "wordOptions": ["선택지1", "선택지2", "선택지3", "선택지4"],
-  "correctAnswers": ["정답1", "정답2"]
+  "correctAnswers": ["정답1"]
 }
 
-- korean: 한글 미션 문장 (예: "오늘 좋아하는 과일은?")
-- template: 영어 문장 템플릿, 빈칸은 ___로 표시 (예: "I like ___ today.")
-- blanks: 빈칸 개수 (1 또는 2)
-- wordOptions: 선택 가능한 단어 목록 (4-6개, 정답 포함 + 오답 2-4개)
-- correctAnswers: 정답 배열 (빈칸 순서대로)
+- korean: 한글 미션 문장 (${grade}학년 수준에 맞는 간단한 문장)
+- template: 영어 문장 템플릿, 빈칸은 ___로 표시 (예: "I like ___")
+- blanks: 빈칸 개수 (항상 1)
+- wordOptions: 선택 가능한 단어 목록 (4-6개, 정답 포함 + 오답 3-5개)
+- correctAnswers: 정답 배열 (빈칸이 1개이므로 1개 요소)
 
 예시:
-- 레벨 1: {"korean": "나는 사과를 좋아해요", "template": "I like ___", "blanks": 1, "wordOptions": ["apple", "banana", "orange", "grape"], "correctAnswers": ["apple"]}
-- 레벨 2: {"korean": "나는 매일 학교에 가요", "template": "I go to ___ every ___", "blanks": 2, "wordOptions": ["school", "home", "day", "morning", "week"], "correctAnswers": ["school", "day"]}`
+- 1학년: {"korean": "나는 사과를 좋아해요", "template": "I like ___", "blanks": 1, "wordOptions": ["apple", "banana", "orange", "grape"], "correctAnswers": ["apple"]}
+- 2학년: {"korean": "나는 학교에 가요", "template": "I go to ___", "blanks": 1, "wordOptions": ["school", "home", "park", "store"], "correctAnswers": ["school"]}
+- 3학년: {"korean": "나는 매일 운동을 해요", "template": "I exercise every ___", "blanks": 1, "wordOptions": ["day", "morning", "week", "month"], "correctAnswers": ["day"]}`
 
     // OpenAI API 호출
     const completion = await openai.chat.completions.create({
@@ -162,7 +157,7 @@ export async function POST(request: Request) {
         blanks,
         wordOptions,
         correctAnswers,
-        level,
+        grade,
       },
       energy: {
         current: newEnergy,

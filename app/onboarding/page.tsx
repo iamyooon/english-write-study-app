@@ -16,7 +16,6 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [existingPlacementLevel, setExistingPlacementLevel] = useState<number | null>(null)
   const [showPlacementOption, setShowPlacementOption] = useState(false)
 
   // 상태 변경 추적을 위한 로그
@@ -45,22 +44,16 @@ export default function OnboardingPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('grade, placement_level')
+          .select('grade')
           .eq('id', userId)
           .maybeSingle()
 
         console.log('[온보딩] 프로필 조회 완료:', { profile, profileError })
 
         // 타입 단언 (Supabase 타입 추론 문제 해결)
-        const profileData = profile as { grade?: number; placement_level?: number } | null
+        const profileData = profile as { grade?: number } | null
 
         if (isMounted && !profileError) {
-          // 이미 placement_level이 있으면 저장
-          if (profileData?.placement_level) {
-            console.log('[온보딩] 기존 placement_level 발견:', profileData.placement_level)
-            setExistingPlacementLevel(profileData.placement_level)
-          }
-
           // 학년 정보 설정
           if (profileData?.grade) {
             console.log('[온보딩] 프로필에서 학년 정보 발견:', profileData.grade)
@@ -179,27 +172,25 @@ export default function OnboardingPage() {
     }
   }, [router])
 
-  // URL 파라미터에서 레벨테스트 결과 확인
+  // URL 파라미터에서 Placement Test 결과 확인
   useEffect(() => {
     if (!isLoggedIn) return
 
     const urlParams = new URLSearchParams(window.location.search)
-    const placementLevelParam = urlParams.get('placement_level')
+    const recommendedGradeParam = urlParams.get('recommended_grade')
 
-    if (placementLevelParam) {
-      const level = parseInt(placementLevelParam, 10)
-      // 레벨테스트 결과에 따라 학년 추정
+    if (recommendedGradeParam) {
+      const recommendedGrade = parseInt(recommendedGradeParam, 10)
+      // Placement Test 결과에 따라 학년 설정
       const storedResult = sessionStorage.getItem('placement_result')
       if (storedResult) {
         const result = JSON.parse(storedResult)
-        // result.grade가 있으면 사용, 없으면 gradeLevel을 학년으로 변환
-        if (result.grade && result.grade >= 1 && result.grade <= 6) {
-          setSelectedGrade(result.grade)
-        } else if (result.gradeLevel === 'elementary_low') {
-          setSelectedGrade(1) // 기본값 1학년
-        } else if (result.gradeLevel === 'elementary_high') {
-          setSelectedGrade(4) // 기본값 4학년
+        // 추천 학년이 있으면 사용
+        if (result.recommended_grade && result.recommended_grade >= 1 && result.recommended_grade <= 6) {
+          setSelectedGrade(result.recommended_grade)
         }
+      } else if (recommendedGrade >= 1 && recommendedGrade <= 6) {
+        setSelectedGrade(recommendedGrade)
       }
     }
   }, [isLoggedIn])
@@ -227,23 +218,9 @@ export default function OnboardingPage() {
         return
       }
 
-      // 레벨테스트 결과 확인
-      const storedResult = sessionStorage.getItem('placement_result')
-      let placementLevel: number | undefined = undefined
-
-      if (storedResult) {
-        const result = JSON.parse(storedResult)
-        placementLevel = result.placement_level
-      }
-
       // 프로필 업데이트 또는 생성
       const profileData: any = {
         grade: selectedGrade, // 1-6학년
-      }
-
-      if (placementLevel) {
-        profileData.placement_level = placementLevel
-        profileData.level = placementLevel
       }
 
       // 프로필 확인 및 업데이트
@@ -280,23 +257,17 @@ export default function OnboardingPage() {
       // 프로필 업데이트 후 헤더에 알림
       window.dispatchEvent(new Event('profileUpdated'))
 
-      // 레벨테스트 결과가 있으면 Writing 페이지로
-      if (placementLevel) {
-        toast.success('시작 준비가 완료되었습니다!')
-        sessionStorage.removeItem('placement_result') // 저장된 결과 삭제
-        router.push(`/writing?placement_level=${placementLevel}`)
-      } 
-      // Placement Test 재시도 옵션이 활성화되었거나 placement_level이 없으면 Placement Test로
-      else if (showPlacementOption || !existingPlacementLevel) {
+      // Placement Test 재시도 옵션이 활성화되었으면 Placement Test로
+      if (showPlacementOption) {
         toast.success('레벨테스트를 시작합니다!')
         // 학년에 따라 gradeLevel 결정 (1-3: elementary_low, 4-6: elementary_high)
         const gradeLevel = selectedGrade! <= 3 ? 'elementary_low' : 'elementary_high'
-        router.push(`/placement?gradeLevel=${gradeLevel}${showPlacementOption ? '&retake=true' : ''}`)
+        router.push(`/placement?gradeLevel=${gradeLevel}&retake=true`)
       } 
-      // 기존 placement_level이 있으면 Writing 페이지로 (Placement Test 건너뛰기)
-      else if (existingPlacementLevel) {
-        toast.success('기존 레벨로 학습을 시작합니다!')
-        router.push(`/writing?placement_level=${existingPlacementLevel}`)
+      // 바로 학습 시작
+      else {
+        toast.success('학습을 시작합니다!')
+        router.push(`/writing?recommended_grade=${selectedGrade}`)
       }
     } catch (error: any) {
       console.error('온보딩 오류:', error)
@@ -348,9 +319,16 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             시작하기
           </h1>
-          <p className="text-gray-600 text-sm">
-            수준을 선택해주세요
+          <p className="text-gray-600 text-sm mb-2">
+            학년을 선택해주세요
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+            <p className="text-xs text-blue-800 text-left">
+              💡 <strong>학년</strong>: 현재 다니는 학년 또는 Placement Test로 추천받은 학년<br/>
+              💡 <strong>저학년(1-3학년)</strong>: Drag & Drop 방식으로 학습<br/>
+              💡 <strong>고학년(4-6학년)</strong>: 키보드 입력 방식으로 학습
+            </p>
+          </div>
         </div>
 
         {/* 학년 선택 */}
@@ -376,17 +354,22 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Placement Test 재시도 옵션 (기존 레벨이 있는 경우) */}
-        {existingPlacementLevel && (
+        {/* Placement Test 재시도 옵션 */}
+        {selectedGrade && (
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-gray-700 mb-2">
-              이미 레벨 {existingPlacementLevel}로 설정되어 있습니다.
+            <p className="text-sm text-gray-700 mb-3">
+              Placement Test를 통해 적절한 학년을 추천받을 수 있습니다.
             </p>
             <button
               onClick={() => setShowPlacementOption(true)}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
+              disabled={isLoading}
+              className={`w-full px-6 py-3 rounded-lg font-semibold transition-all ${
+                !isLoading
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
-              레벨테스트를 다시 받고 싶어요
+              레벨테스트를 받고 싶어요
             </button>
           </div>
         )}
@@ -401,17 +384,8 @@ export default function OnboardingPage() {
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {isLoading ? '준비 중...' : showPlacementOption || !existingPlacementLevel ? '레벨테스트 시작' : '학습 시작하기'}
+            {isLoading ? '준비 중...' : showPlacementOption ? '레벨테스트 시작' : '학습 시작하기'}
           </button>
-          
-          {existingPlacementLevel && !showPlacementOption && (
-            <button
-              onClick={() => router.push(`/writing?placement_level=${existingPlacementLevel}`)}
-              className="w-full px-6 py-3 rounded-lg font-semibold transition-all bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl"
-            >
-              기존 레벨로 학습 시작
-            </button>
-          )}
         </div>
       </div>
     </main>

@@ -3,7 +3,7 @@
  * 
  * POST /api/placement/submit
  * 
- * 5~7문항의 Placement Test 결과를 평가하고 placement_level을 결정합니다.
+ * 5~7문항의 Placement Test 결과를 평가하고 적절한 학년을 추천합니다.
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -75,9 +75,11 @@ export async function POST(request: Request) {
     }
 
     // GPT-4o로 Placement Test 평가
+    // Placement Test는 적절한 학년만 추천합니다 (레벨 시스템 없음)
     const evaluationPrompt = `다음은 초등학생의 영어 실력 평가 테스트 결과입니다.
 
-학년: ${gradeLevel === 'elementary_low' ? '초등 저학년 (1-3학년)' : '초등 고학년 (4-6학년)'}
+참고 정보:
+- 테스트 대상 학년 수준: ${gradeLevel === 'elementary_low' ? '초등 저학년 (1-3학년)' : '초등 고학년 (4-6학년)'}
 
 테스트 문항과 학생의 답변:
 ${answers
@@ -97,16 +99,24 @@ ${index + 1}번 문항: ${answer.question}
 
 평가 결과를 다음 JSON 형식으로 반환해주세요:
 {
-  "placement_level": 1-10 사이의 정수 (1: 초급, 5: 중급, 10: 고급),
+  "recommended_grade": 1-6 사이의 정수 (학생의 영어 실력에 적절한 학년 추천),
   "score": 0-100 점수,
   "feedback": "격려하는 피드백 메시지 (한국어)",
   "strengths": ["강점 1", "강점 2"],
   "areas_for_improvement": ["개선점 1", "개선점 2"]
 }
 
-placement_level 결정 기준:
-- 초등 저학년 기준: 1-3 (초급), 4-6 (중급), 7-10 (고급)
-- 초등 고학년 기준: 1-4 (초급), 5-7 (중급), 8-10 (고급)`
+recommended_grade 결정 기준:
+- 학생의 실제 영어 실력에 맞는 학년을 추천하세요.
+- 예: 1학년 수준의 실력이면 recommended_grade = 1
+- 예: 4학년 수준의 실력이면 recommended_grade = 4
+- 예: 6학년 수준의 실력이면 recommended_grade = 6
+- 예: 4학년 학생이지만 영어 실력이 부족하면 recommended_grade = 1-2
+- 예: 1학년 학생이지만 영어 실력이 뛰어나면 recommended_grade = 4-6
+
+중요: 
+- 학년은 문항 난이도 결정에만 사용되었으며, 추천 학년 평가에는 영향을 주지 않습니다.
+- 실제 영어 실력만을 기준으로 적절한 학년을 추천하세요.`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -135,16 +145,24 @@ placement_level 결정 기준:
     }
 
     const evaluation = JSON.parse(evaluationText)
-    const placementLevel = Math.max(1, Math.min(10, evaluation.placement_level || 1))
+    const recommendedGrade = evaluation.recommended_grade ? Math.max(1, Math.min(6, evaluation.recommended_grade)) : null
+
+    if (!recommendedGrade) {
+      return NextResponse.json(
+        { error: '학년 추천 결과를 생성할 수 없습니다.' },
+        { status: 500 }
+      )
+    }
 
     // 계정이 있는 경우에만 프로필에 저장
     if (!noAccount && user && supabase) {
+      const updateData: any = {
+        grade: recommendedGrade,
+      }
+      
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          placement_level: placementLevel,
-          level: placementLevel, // 기본 레벨도 placement_level로 설정
-        })
+        .update(updateData)
         .eq('id', user.id)
 
       if (updateError) {
@@ -158,7 +176,7 @@ placement_level 결정 기준:
 
     return NextResponse.json({
       success: true,
-      placement_level: placementLevel,
+      recommended_grade: recommendedGrade,
       evaluation: {
         score: evaluation.score,
         feedback: evaluation.feedback,

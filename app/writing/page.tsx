@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { filterProfanity } from '@/lib/safety/profanity-filter'
 import toast from 'react-hot-toast'
@@ -14,7 +15,7 @@ import DragDropMission from '@/components/DragDropMission'
 interface Mission {
   korean: string
   gradeLevel: 'elementary_low' | 'elementary_high'
-  level: number
+  grade: number
 }
 
 interface DragDropMissionData {
@@ -24,7 +25,7 @@ interface DragDropMissionData {
   blanks: number
   wordOptions: string[]
   correctAnswers: string[]
-  level: number
+  grade: number
 }
 
 interface Feedback {
@@ -42,6 +43,7 @@ interface Feedback {
 }
 
 export default function WritingPage() {
+  const router = useRouter()
   const [mission, setMission] = useState<Mission | null>(null)
   const [dragDropMission, setDragDropMission] = useState<DragDropMissionData | null>(null)
   const [userInput, setUserInput] = useState('')
@@ -51,10 +53,6 @@ export default function WritingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [grade, setGrade] = useState<number | null>(null) // 1-6학년, null이면 학년 선택 안됨
   const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(null) // grade에 따라 자동 설정
-  const [level, setLevel] = useState<number | null>(null) // null이면 레벨 선택 안됨
-  const [placementLevel, setPlacementLevel] = useState<number | null>(null)
-  const [recommendedLevel, setRecommendedLevel] = useState<number | null>(null)
-  const [showRecommendation, setShowRecommendation] = useState(false)
   const [energy, setEnergy] = useState<number>(5) // 기본값 5
 
   // 학년에 따라 gradeLevel 자동 설정
@@ -64,21 +62,8 @@ export default function WritingPage() {
     }
   }, [grade])
 
-  // 레벨 1~2는 Drag & Drop, 3~6은 키보드 입력
-  const isDragDropMode = level !== null && level <= 2
-
-  // 레벨 변경 시 상태 초기화
-  useEffect(() => {
-    if (isDragDropMode) {
-      // Drag & Drop 모드로 전환 시 기존 미션 초기화
-      setMission(null)
-      setUserInput('')
-      setFeedback(null)
-    } else {
-      // 키보드 입력 모드로 전환 시 Drag & Drop 미션 초기화
-      setDragDropMission(null)
-    }
-  }, [isDragDropMode])
+  // 저학년(1-3학년)은 Drag & Drop, 고학년(4-6학년)은 키보드 입력
+  const isDragDropMode = grade !== null && grade <= 3
 
   // 사용자 세션 확인 및 placement_level 가져오기
   useEffect(() => {
@@ -94,51 +79,33 @@ export default function WritingPage() {
         return
       }
 
-      // URL 파라미터에서 placement_level 확인 (자동 설정하지 않음 - 추천만 표시)
+      // URL 파라미터에서 추천 학년 확인
       const urlParams = new URLSearchParams(window.location.search)
-      const placementLevelParam = urlParams.get('placement_level')
-      if (placementLevelParam) {
-        const level = parseInt(placementLevelParam, 10)
-        setPlacementLevel(level)
-        setRecommendedLevel(level)
-        // setLevel(level) // 자동 설정하지 않음 - 사용자가 선택하도록
-        setShowRecommendation(true)
-        
-        // 프로필에도 저장
-        // 타입 단언 (Supabase 타입 추론 문제 해결)
-        const updateSupabase = supabase as any
-        await updateSupabase
-          .from('profiles')
-          .update({ placement_level: level })
-          .eq('id', session.user.id)
+      const recommendedGradeParam = urlParams.get('recommended_grade')
+      if (recommendedGradeParam) {
+        const recommendedGrade = parseInt(recommendedGradeParam, 10)
+        if (recommendedGrade >= 1 && recommendedGrade <= 6) {
+          setGrade(recommendedGrade)
+        }
       } else {
-        // 프로필에서 placement_level 가져오기 (추천만 표시)
+        // 프로필에서 학년 가져오기
         const { data: profile } = await supabase
           .from('profiles')
-          .select('placement_level, grade')
+          .select('grade')
           .eq('id', session.user.id)
           .maybeSingle()
 
         // 타입 단언 (Supabase 타입 추론 문제 해결)
-        const profileData = profile as { placement_level?: number; grade?: number } | null
+        const profileData = profile as { grade?: number } | null
 
-        if (profileData) {
-          if (profileData.placement_level) {
-            setPlacementLevel(profileData.placement_level)
-            setRecommendedLevel(profileData.placement_level)
-            // setLevel(profileData.placement_level) // 자동 설정하지 않음
-          }
-          
-          // 학년 정보는 추천으로만 사용 (자동 설정하지 않음)
-          // if (profileData.grade && profileData.grade >= 1 && profileData.grade <= 6) {
-          //   setGrade(profileData.grade)
-          // }
+        if (profileData && profileData.grade && profileData.grade >= 1 && profileData.grade <= 6) {
+          setGrade(profileData.grade)
+        }
 
-          // 에너지 정보 가져오기
-          const profileWithEnergy = profileData as { energy?: number }
-          if (profileWithEnergy.energy !== undefined) {
-            setEnergy(profileWithEnergy.energy)
-          }
+        // 에너지 정보 가져오기
+        const profileWithEnergy = profileData as { energy?: number } | null
+        if (profileWithEnergy && profileWithEnergy.energy !== undefined) {
+          setEnergy(profileWithEnergy.energy)
         }
       }
     }
@@ -186,16 +153,16 @@ export default function WritingPage() {
 
   // 한글 문장 생성
   const handleGenerateMission = async () => {
-    // 학년과 레벨이 선택되지 않았으면 에러
-    if (grade === null || level === null || gradeLevel === null) {
-      toast.error('먼저 학년과 레벨을 선택해주세요.')
+    // 학년이 선택되지 않았으면 에러
+    if (grade === null || gradeLevel === null) {
+      toast.error('먼저 학년을 선택해주세요.')
       return
     }
     
-    console.log('[문장 생성] 시작:', { isDragDropMode, gradeLevel, level, energy })
+    console.log('[문장 생성] 시작:', { isDragDropMode, gradeLevel, grade, energy })
     setIsGenerating(true)
     try {
-      // Drag & Drop 모드인 경우 별도 API 호출
+      // Drag & Drop 모드인 경우 별도 API 호출 (저학년 1-3학년)
       if (isDragDropMode) {
         console.log('[문장 생성] Drag & Drop 모드 - API 호출 시작')
         const response = await fetch('/api/study/generate-drag-drop-mission', {
@@ -205,7 +172,7 @@ export default function WritingPage() {
           },
           body: JSON.stringify({
             gradeLevel,
-            level,
+            grade,
           }),
         })
 
@@ -235,7 +202,7 @@ export default function WritingPage() {
           toast.success('새 미션이 생성되었습니다!')
         }
       } else {
-        // 기존 키보드 입력 방식
+        // 키보드 입력 방식 (고학년 4-6학년)
         const response = await fetch('/api/study/generate-mission', {
           method: 'POST',
           headers: {
@@ -243,7 +210,7 @@ export default function WritingPage() {
           },
           body: JSON.stringify({
             gradeLevel,
-            level,
+            grade,
           }),
         })
 
@@ -364,7 +331,7 @@ export default function WritingPage() {
           missionText: mission.korean,
           userInput: userInput.trim(),
           gradeLevel: mission.gradeLevel,
-          level: mission.level,
+          grade: mission.grade,
         }),
       })
 
@@ -423,106 +390,29 @@ export default function WritingPage() {
     }
   }
 
-  // 학년과 레벨이 선택되지 않았으면 학년 선택 화면 표시
-  if (grade === null || level === null) {
+  // 학년이 선택되지 않았으면 온보딩 페이지로 리다이렉트
+  useEffect(() => {
+    if (grade === null) {
+      const timer = setTimeout(() => {
+        router.push('/onboarding')
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [grade, router])
+
+  // 학년이 선택되지 않았으면 로딩 화면 표시
+  if (grade === null) {
     return (
-      <main className="min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              학습 시작하기
-            </h1>
-            <p className="text-gray-600">학년과 레벨을 선택해주세요</p>
-          </div>
-
-          {/* Placement Test 결과 기반 레벨 추천 */}
-          {showRecommendation && recommendedLevel && (
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-indigo-800 mb-1">
-                    🎯 추천 레벨
-                  </div>
-                  <div className="text-lg font-bold text-indigo-600">
-                    레벨 {recommendedLevel}
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    Placement Test 결과를 바탕으로 추천된 레벨입니다.
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowRecommendation(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 학년 선택 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              학년을 선택해주세요
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              {[1, 2, 3, 4, 5, 6].map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGrade(g)}
-                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                    grade === g
-                      ? 'bg-indigo-600 text-white shadow-lg scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <div className="text-lg font-semibold">{g}학년</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 레벨 선택 */}
-          {grade && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                레벨 선택 {placementLevel && `(추천: 레벨 ${placementLevel})`}
-              </label>
-              <select
-                value={level || ''}
-                onChange={(e) => setLevel(parseInt(e.target.value, 10))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
-              >
-                <option value="">레벨을 선택하세요</option>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((lvl) => (
-                  <option key={lvl} value={lvl}>
-                    레벨 {lvl} {lvl === placementLevel ? '(추천)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* 시작 버튼 */}
-          {grade && level && (
-            <div className="flex justify-center pt-4">
-              <button
-                onClick={() => {
-                  // 학년과 레벨이 선택되면 미션 생성 화면으로 전환
-                  console.log('[Writing] 학년과 레벨 선택 완료:', { grade, level, gradeLevel })
-                }}
-                className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-lg hover:shadow-xl transition-all"
-              >
-                학습 시작하기
-              </button>
-            </div>
-          )}
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">학습 준비 중...</p>
         </div>
       </main>
     )
   }
 
-  // Drag & Drop 모드 렌더링 (레벨 1~2)
+  // Drag & Drop 모드 렌더링 (저학년 1-3학년)
   if (isDragDropMode) {
     return (
       <main className="min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -531,7 +421,7 @@ export default function WritingPage() {
             <h1 className="text-3xl font-bold text-gray-800">
               단어 드래그 미션
             </h1>
-            <p className="text-gray-600 mt-2">레벨 {level ?? '?'} - 단어를 드래그하여 문장을 완성하세요!</p>
+            <p className="text-gray-600 mt-2">{grade}학년 - 단어를 드래그하여 문장을 완성하세요!</p>
           </div>
           
           {dragDropMission ? (
@@ -610,7 +500,7 @@ export default function WritingPage() {
                   드래그 앤 드롭 미션
                 </h2>
                 <p className="text-gray-600">
-                  레벨 {level ?? '?'}은 단어를 드래그하여 문장을 완성하는 방식입니다.
+                  {grade}학년은 단어를 드래그하여 문장을 완성하는 방식입니다.
                   <br />
                   아래 버튼을 눌러 미션을 시작해보세요!
                 </p>
@@ -636,7 +526,7 @@ export default function WritingPage() {
     )
   }
 
-  // 키보드 입력 모드 렌더링 (레벨 3~6)
+  // 키보드 입력 모드 렌더링 (고학년 4-6학년)
   return (
     <main className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
@@ -646,73 +536,6 @@ export default function WritingPage() {
           </h1>
         </div>
 
-        {/* Placement Test 결과 기반 레벨 추천 */}
-        {showRecommendation && recommendedLevel && (
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold text-indigo-800 mb-1">
-                  🎯 추천 레벨
-                </div>
-                <div className="text-lg font-bold text-indigo-600">
-                  레벨 {recommendedLevel}
-                </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  Placement Test 결과를 바탕으로 추천된 레벨입니다.
-                </div>
-              </div>
-              <button
-                onClick={() => setShowRecommendation(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 학년 선택 */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            학년을 선택해주세요
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((g) => (
-              <button
-                key={g}
-                onClick={() => setGrade(g)}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  grade === g
-                    ? 'bg-indigo-600 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <div className="text-lg font-semibold">{g}학년</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 레벨 선택 */}
-        {placementLevel && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              레벨 선택 {placementLevel && `(추천: 레벨 ${placementLevel})`}
-            </label>
-            <select
-              value={level || ''}
-              onChange={(e) => setLevel(parseInt(e.target.value, 10))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
-            >
-              <option value="">레벨을 선택하세요</option>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((lvl) => (
-                <option key={lvl} value={lvl}>
-                  레벨 {lvl} {lvl === placementLevel ? '(추천)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* 한글 문장 */}
         <div className="space-y-2">

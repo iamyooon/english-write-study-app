@@ -1,6 +1,6 @@
 /**
  * Drag & Drop 미션 제출 API
- * 저학년용 Level 1 미션 결과 저장
+ * 저학년용(1-3학년) Drag & Drop 미션 결과 저장
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,7 +12,7 @@ const submitSchema = z.object({
   userAnswer: z.string(),
   fullSentence: z.string(),
   isCorrect: z.boolean(),
-  level: z.number().int().min(1).max(6),
+  grade: z.number().int().min(1).max(6), // 학년 1-6
 })
 
 export async function POST(request: NextRequest) {

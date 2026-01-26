@@ -59,21 +59,21 @@ export default function PlacementTestPage() {
         return
       }
 
-      // 프로필에서 학년 정보 및 placement_level 가져오기
+      // 프로필에서 학년 정보 가져오기
       const { data: profile } = await supabase
         .from('profiles')
-        .select('grade, placement_level')
+        .select('grade')
         .eq('id', session.user.id)
         .maybeSingle()
 
       // 타입 단언 (Supabase 타입 추론 문제 해결)
-      const profileData = profile as { grade?: number; placement_level?: number } | null
+      const profileData = profile as { grade?: number } | null
 
       // URL 파라미터에서 재시도 옵션 확인
       const retake = urlParams.get('retake') === 'true'
 
-      // 이미 Placement Test를 완료한 경우, 재시도 옵션이 없으면 Writing 페이지로 리다이렉트
-      if (profileData?.placement_level && !retake) {
+      // 이미 학년이 설정되어 있고 재시도 옵션이 없으면 Writing 페이지로 리다이렉트
+      if (profileData?.grade && !retake) {
         router.push('/writing')
         return
       }
@@ -184,26 +184,28 @@ export default function PlacementTestPage() {
       if (noAccount) {
         // 계정 없이 진행: 결과를 세션 스토리지에 저장하고 계정 생성 유도
         sessionStorage.setItem('placement_result', JSON.stringify({
-          placement_level: data.placement_level,
+          recommended_grade: data.recommended_grade,
           gradeLevel,
         }))
         
-        toast.success(`레벨테스트 완료! 추천 레벨: ${data.placement_level}`, {
+        const gradeText = data.recommended_grade ? `추천 학년: ${data.recommended_grade}학년` : ''
+        
+        toast.success(`레벨테스트 완료! ${gradeText}`, {
           duration: 5000,
         })
 
         // 계정 생성 페이지로 이동
         setTimeout(() => {
-          router.push(`/onboarding?placement_level=${data.placement_level}&createAccount=true`)
+          router.push(`/onboarding?recommended_grade=${data.recommended_grade}&createAccount=true`)
         }, 2000)
       } else {
         // 계정 있음: Writing 페이지로 이동
-        toast.success('테스트가 완료되었습니다!', {
+        toast.success(`테스트 완료! 추천 학년: ${data.recommended_grade}학년`, {
           duration: 3000,
         })
 
         setTimeout(() => {
-          router.push(`/writing?placement_level=${data.placement_level}`)
+          router.push(`/writing?recommended_grade=${data.recommended_grade}`)
         }, 2000)
       }
     } catch (error: any) {

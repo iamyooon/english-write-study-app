@@ -17,14 +17,14 @@ const submitSchema = z.object({
   missionText: z.string(),
   userInput: z.string().min(1, '영어 문장을 입력해주세요.'),
   gradeLevel: z.enum(['elementary_low', 'elementary_high']).optional(),
-  level: z.number().min(1).max(10).optional(),
+  grade: z.number().min(1).max(6).optional(), // 학년 1-6
   skipQueue: z.boolean().optional().default(false),
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { missionText, userInput, gradeLevel, level, skipQueue } =
+    const { missionText, userInput, gradeLevel, grade, skipQueue } =
       submitSchema.parse(body)
 
     // 사용자 인증 확인

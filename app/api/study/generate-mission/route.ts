@@ -13,13 +13,13 @@ import { z } from 'zod'
 
 const generateMissionSchema = z.object({
   gradeLevel: z.enum(['elementary_low', 'elementary_high']),
-  level: z.number().min(1).max(10).default(1),
+  grade: z.number().min(1).max(6), // 학년 1-6
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { gradeLevel, level } = generateMissionSchema.parse(body)
+    const { gradeLevel, grade } = generateMissionSchema.parse(body)
 
     // 사용자 인증 확인
     const supabase = await createClient()
@@ -64,17 +64,39 @@ export async function POST(request: Request) {
       )
     }
 
-    // 수준에 맞는 프롬프트 생성
-    const levelDescription =
-      gradeLevel === 'elementary_low'
-        ? '초등학교 저학년(1-3학년) 수준의 간단한 문장'
-        : '초등학교 고학년(4-6학년) 수준의 문장'
+    // 학년에 맞는 프롬프트 생성
+    const gradeDescription = grade <= 3
+      ? `초등학교 ${grade}학년 수준의 문장`
+      : `초등학교 ${grade}학년 수준의 문장`
+    
+    // 학년별 문장 길이 및 난이도 결정
+    const wordCount = grade <= 3 
+      ? `${3 + grade * 2}-${5 + grade * 2}단어` // 1학년: 5-7단어, 2학년: 7-9단어, 3학년: 9-11단어
+      : `${7 + (grade - 3) * 2}-${11 + (grade - 3) * 2}단어` // 4학년: 11-13단어, 5학년: 13-15단어, 6학년: 15-17단어
+    
+    // 학년에 따른 문법 요소 결정
+    let grammarElements = '기본 단어, 현재형, 단수/복수'
+    if (grade >= 2) {
+      grammarElements += ', 형용사, 부사'
+    }
+    if (grade >= 3) {
+      grammarElements += ', 기본 전치사'
+    }
+    if (grade >= 4) {
+      grammarElements += ', 접속사(because, but, and)'
+    }
+    if (grade >= 5) {
+      grammarElements += ', 복합 문장'
+    }
+    if (grade >= 6) {
+      grammarElements += ', 시제 변화, 비교급'
+    }
 
     const prompt = `다음 조건에 맞는 한글 문장과 함께 어휘 목록과 예시 문장을 생성해주세요:
-- 대상: ${levelDescription}
-- 난이도 레벨: ${level}/10
+- 대상: ${gradeDescription}
 - 주제: 일상생활, 가족, 학교, 취미 등 초등학생에게 친숙한 주제
-- 길이: ${gradeLevel === 'elementary_low' ? '5-8단어' : '8-12단어'}
+- 길이: ${wordCount}
+- 문법 요소: ${grammarElements}
 
 다음 JSON 형식으로 응답해주세요:
 {
@@ -84,11 +106,14 @@ export async function POST(request: Request) {
 }
 
 - vocabulary: 한글 문장을 영어로 번역할 때 필요한 주요 단어 3-5개 (영어 단어)
-- example: 한글 문장을 영어로 번역한 예시 문장 (초등학생 수준의 간단한 영어)
+- example: 한글 문장을 영어로 번역한 예시 문장 (${grade}학년 수준에 맞는 영어)
 
 예시:
-- 저학년: {"korean": "나는 사과를 좋아해요", "vocabulary": ["I", "like", "apple"], "example": "I like apples."}
-- 고학년: {"korean": "나는 매일 아침 일찍 일어나서 운동을 해요", "vocabulary": ["I", "every", "morning", "early", "exercise"], "example": "I wake up early every morning and exercise."}`
+${grade <= 2 
+  ? '{"korean": "나는 사과를 좋아해요", "vocabulary": ["I", "like", "apple"], "example": "I like apples."}'
+  : grade <= 4
+  ? '{"korean": "나는 매일 아침 일찍 일어나서 운동을 해요", "vocabulary": ["I", "every", "morning", "early", "exercise"], "example": "I wake up early every morning and exercise."}'
+  : '{"korean": "나는 사과를 좋아하지만 오렌지를 더 선호해요 왜냐하면 더 달콤하기 때문이에요", "vocabulary": ["I", "like", "apple", "but", "prefer", "orange", "because", "sweeter"], "example": "I like apples, but I prefer oranges because they are sweeter."}'}`
 
     // OpenAI API 호출
     const completion = await openai.chat.completions.create({
@@ -144,7 +169,7 @@ export async function POST(request: Request) {
         vocabulary: Array.isArray(vocabulary) ? vocabulary : [],
         example: example,
         gradeLevel,
-        level,
+        grade,
       },
       energy: {
         current: newEnergy,
