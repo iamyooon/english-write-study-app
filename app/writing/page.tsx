@@ -56,6 +56,7 @@ export default function WritingPage() {
   const getInitialGrade = () => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
+      // grade 또는 recommended_grade 파라미터 확인
       const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
       if (gradeParam) {
         const gradeValue = parseInt(gradeParam, 10)

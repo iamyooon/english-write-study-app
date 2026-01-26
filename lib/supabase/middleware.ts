@@ -76,12 +76,13 @@ export async function updateSession(request: NextRequest) {
   // 로그인한 사용자가 /writing 접근 시 학년 확인
   if (pathname.startsWith('/writing') && user) {
     try {
-      // URL 파라미터에 학년이 있으면 통과
-      const gradeParam = request.nextUrl.searchParams.get('grade')
+      // URL 파라미터에 학년이 있으면 통과 (grade 또는 recommended_grade)
+      const gradeParam = request.nextUrl.searchParams.get('grade') || 
+                         request.nextUrl.searchParams.get('recommended_grade')
       if (gradeParam) {
         const gradeValue = parseInt(gradeParam, 10)
         if (gradeValue >= 1 && gradeValue <= 6) {
-          // 학년 파라미터가 유효하면 통과
+          // 학년 파라미터가 유효하면 통과 (온보딩에서 "학습 시작하기"로 온 경우)
           return supabaseResponse
         }
       }
