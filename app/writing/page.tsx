@@ -52,8 +52,25 @@ export default function WritingPage() {
   const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [grade, setGrade] = useState<number | null>(null) // 1-6학년, null이면 학년 선택 안됨
-  const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(null) // grade에 따라 자동 설정
+  // URL 파라미터에서 초기 학년 확인 (서버 사이드 렌더링 방지)
+  const getInitialGrade = () => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
+      if (gradeParam) {
+        const gradeValue = parseInt(gradeParam, 10)
+        if (gradeValue >= 1 && gradeValue <= 6) {
+          return gradeValue
+        }
+      }
+    }
+    return null
+  }
+
+  const [grade, setGrade] = useState<number | null>(getInitialGrade()) // 1-6학년, null이면 학년 선택 안됨
+  const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(
+    getInitialGrade() ? (getInitialGrade()! <= 3 ? 'elementary_low' : 'elementary_high') : null
+  ) // grade에 따라 자동 설정
   const [energy, setEnergy] = useState<number>(5) // 기본값 5
 
   // 학년에 따라 gradeLevel 자동 설정
@@ -80,38 +97,51 @@ export default function WritingPage() {
         return
       }
 
-      // URL 파라미터에서 추천 학년 확인
+      // URL 파라미터에서 학년 확인 (이미 초기 상태에서 설정되었을 수 있음)
       const urlParams = new URLSearchParams(window.location.search)
-      const recommendedGradeParam = urlParams.get('recommended_grade')
-      if (recommendedGradeParam) {
-        const recommendedGrade = parseInt(recommendedGradeParam, 10)
-        if (recommendedGrade >= 1 && recommendedGrade <= 6) {
-          setGrade(recommendedGrade)
+      const gradeParam = urlParams.get('grade') || urlParams.get('recommended_grade')
+      
+      if (gradeParam) {
+        const gradeValue = parseInt(gradeParam, 10)
+        if (gradeValue >= 1 && gradeValue <= 6 && grade === null) {
+          // 초기 상태에서 설정되지 않았을 경우에만 설정
+          setGrade(gradeValue)
         }
-      } else {
-        // 프로필에서 학년 가져오기
+        // 프로필에서 에너지 정보만 가져오기
         const { data: profile } = await supabase
           .from('profiles')
-          .select('grade')
+          .select('energy')
           .eq('id', session.user.id)
           .maybeSingle()
-
-        // 타입 단언 (Supabase 타입 추론 문제 해결)
-        const profileData = profile as { grade?: number } | null
-
-        // 학년이 없으면 즉시 온보딩으로 리다이렉트 (화면 렌더링 없이)
-        if (!profileData || !profileData.grade || profileData.grade < 1 || profileData.grade > 6) {
-          router.replace('/onboarding')
-          return
+        
+        const profileData = profile as { energy?: number } | null
+        if (profileData && profileData.energy !== undefined) {
+          setEnergy(profileData.energy)
         }
+        return
+      }
+      
+      // URL 파라미터에 학년이 없으면 프로필에서 학년 가져오기
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('grade, energy')
+        .eq('id', session.user.id)
+        .maybeSingle()
 
-        setGrade(profileData.grade)
+      // 타입 단언 (Supabase 타입 추론 문제 해결)
+      const profileData = profile as { grade?: number; energy?: number } | null
 
-        // 에너지 정보 가져오기
-        const profileWithEnergy = profileData as { energy?: number } | null
-        if (profileWithEnergy && profileWithEnergy.energy !== undefined) {
-          setEnergy(profileWithEnergy.energy)
-        }
+      // 학년이 없으면 즉시 온보딩으로 리다이렉트 (화면 렌더링 없이)
+      if (!profileData || !profileData.grade || profileData.grade < 1 || profileData.grade > 6) {
+        router.replace('/onboarding')
+        return
+      }
+
+      setGrade(profileData.grade)
+
+      // 에너지 정보 가져오기
+      if (profileData.energy !== undefined) {
+        setEnergy(profileData.energy)
       }
     }
     checkSession()

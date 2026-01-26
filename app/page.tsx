@@ -53,8 +53,12 @@ export default function HomePage() {
           }
 
           // 로딩 화면을 보여주지 않고 즉시 리다이렉트
-          const targetPath = hasGrade ? '/writing' : '/onboarding'
-          router.replace(targetPath)
+          if (hasGrade) {
+            // 학년이 있으면 URL 파라미터로 학년을 전달하여 즉시 렌더링되도록 함
+            router.replace(`/writing?grade=${profileData.grade}`)
+          } else {
+            router.replace('/onboarding')
+          }
           return
         }
         
