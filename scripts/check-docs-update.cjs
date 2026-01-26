@@ -110,55 +110,27 @@ function main() {
     return 0;
   }
 
-  // 경고 메시지 출력
-  console.log('\n📚 문서 업데이트 확인 결과:\n');
-  console.log('⚠️  다음 문서들의 업데이트를 고려해주세요:\n');
-
-  if (needsUpdate.readme) {
-    console.log('  📄 README.md');
-    console.log('     - 프로젝트 구조 섹션');
-    console.log('     - 주요 기능 설명');
-    console.log('     - API 엔드포인트 목록\n');
+  // 자동 업데이트 스크립트 실행
+  console.log('\n📚 문서 자동 업데이트 시작...\n');
+  
+  try {
+    const updateScript = require('./update-docs.cjs');
+    updateScript.main();
+  } catch (error) {
+    console.error('⚠️  문서 자동 업데이트 중 오류 발생:', error.message);
+    console.log('\n📋 수동 업데이트가 필요한 문서:');
+    
+    if (needsUpdate.readme) {
+      console.log('  📄 README.md');
+    }
+    if (needsUpdate.projectStructure) {
+      console.log('  📄 PROJECT_STRUCTURE.md');
+    }
+    if (needsUpdate.documentationGuide) {
+      console.log('  📄 docs/DOCUMENTATION_GUIDE.md');
+    }
   }
 
-  if (needsUpdate.architecture) {
-    console.log('  📄 ARCHITECTURE_GUIDE.md');
-    console.log('     - 컴포넌트 구조');
-    console.log('     - 서비스 레이어');
-    console.log('     - 데이터 흐름도\n');
-  }
-
-  if (needsUpdate.projectStructure) {
-    console.log('  📄 PROJECT_STRUCTURE.md');
-    console.log('     - 폴더 구조');
-    console.log('     - 파일 설명\n');
-  }
-
-  if (needsUpdate.implementationStatus) {
-    console.log('  📄 IMPLEMENTATION_STATUS.md');
-    console.log('     - 구현 상태 업데이트\n');
-  }
-
-  if (needsUpdate.documentationGuide) {
-    console.log('  📄 docs/DOCUMENTATION_GUIDE.md');
-    console.log('     - 문서 목록 확인\n');
-  }
-
-  if (needsUpdate.apiDocs) {
-    console.log('  📄 API 문서');
-    console.log('     - API 엔드포인트 설명 업데이트\n');
-  }
-
-  if (reasons.length > 0) {
-    console.log('📋 상세 이유:');
-    reasons.forEach(reason => console.log(`  - ${reason}`));
-    console.log('');
-  }
-
-  console.log('💡 팁: 문서를 업데이트한 후 다시 커밋하거나, --no-verify로 스킵할 수 있습니다.');
-  console.log('');
-
-  // 경고만 출력하고 커밋은 계속 진행 (실패하지 않음)
   return 0;
 }
 

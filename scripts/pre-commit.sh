@@ -54,11 +54,11 @@ E2E_TEST_SUMMARY=$(tail -n 50 /tmp/test-results-e2e.txt | grep -E "(passed|faile
 # E2E 테스트 통계 추출
 E2E_TEST_STATS=$(grep -E "(passed|failed|skipped)" /tmp/test-results-e2e.txt | tail -n 1 || echo "")
 
-# 문서 업데이트 필요성 확인
+# 문서 자동 업데이트
 echo ""
-echo "📚 문서 업데이트 확인 중..."
+echo "📚 문서 자동 업데이트 중..."
 node scripts/check-docs-update.cjs || {
-  echo "⚠️  문서 확인 중 오류 발생 (계속 진행)"
+  echo "⚠️  문서 업데이트 중 오류 발생 (계속 진행)"
 }
 
 # 테스트 결과를 파일로 저장 (prepare-commit-msg에서 사용)
