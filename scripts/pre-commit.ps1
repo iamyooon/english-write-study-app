@@ -71,5 +71,5 @@ if ($hasChanges) {
     Write-Host "ℹ️  문서 변경사항이 없습니다." -ForegroundColor Gray
 }
 
-Write-Host "모든 검사 통과!" -ForegroundColor Green
+Write-Host "All checks passed!" -ForegroundColor Green
 exit 0

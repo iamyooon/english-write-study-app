@@ -153,6 +153,73 @@ export interface Database {
           created_at?: string
         }
       }
+      missions: {
+        Row: {
+          id: string
+          mission_type: 'keyboard' | 'drag_drop'
+          grade_level: 'elementary_low' | 'elementary_high'
+          grade: number
+          unit: number | null
+          topic: Text
+          order_in_unit: number | null
+          mission_data: Json
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          mission_type: 'keyboard' | 'drag_drop'
+          grade_level: 'elementary_low' | 'elementary_high'
+          grade: number
+          unit?: number | null
+          topic?: Text
+          order_in_unit?: number | null
+          mission_data: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          mission_type?: 'keyboard' | 'drag_drop'
+          grade_level?: 'elementary_low' | 'elementary_high'
+          grade?: number
+          unit?: number | null
+          topic?: Text
+          order_in_unit?: number | null
+          mission_data?: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_mission_progress: {
+        Row: {
+          id: string
+          user_id: string
+          mission_id: string
+          completed_at: string
+          score: number | null
+          attempts: number
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          mission_id: string
+          completed_at?: string
+          score?: number | null
+          attempts?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          mission_id?: string
+          completed_at?: string
+          score?: number | null
+          attempts?: number
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -184,6 +251,14 @@ export type UserInventoryUpdate = Database['public']['Tables']['user_inventory']
 export type StudyLog = Database['public']['Tables']['study_logs']['Row']
 export type StudyLogInsert = Database['public']['Tables']['study_logs']['Insert']
 export type StudyLogUpdate = Database['public']['Tables']['study_logs']['Update']
+
+export type Mission = Database['public']['Tables']['missions']['Row']
+export type MissionInsert = Database['public']['Tables']['missions']['Insert']
+export type MissionUpdate = Database['public']['Tables']['missions']['Update']
+
+export type UserMissionProgress = Database['public']['Tables']['user_mission_progress']['Row']
+export type UserMissionProgressInsert = Database['public']['Tables']['user_mission_progress']['Insert']
+export type UserMissionProgressUpdate = Database['public']['Tables']['user_mission_progress']['Update']
 
 // 추가 유틸리티 타입
 export type PublisherType = 'chunjae' | 'ybm'

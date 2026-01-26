@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [selectedGrade, setSelectedGrade] = useState<'elementary_low' | 'elementary_high' | null>(null)
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null) // 1-6학년
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -64,10 +64,8 @@ export default function OnboardingPage() {
           // 학년 정보 설정
           if (profileData?.grade) {
             console.log('[온보딩] 프로필에서 학년 정보 발견:', profileData.grade)
-            if (profileData.grade >= 1 && profileData.grade <= 3) {
-              setSelectedGrade('elementary_low')
-            } else if (profileData.grade >= 4 && profileData.grade <= 6) {
-              setSelectedGrade('elementary_high')
+            if (profileData.grade >= 1 && profileData.grade <= 6) {
+              setSelectedGrade(profileData.grade)
             }
           } else {
             console.log('[온보딩] 프로필에 학년 정보 없음')
@@ -190,22 +188,29 @@ export default function OnboardingPage() {
 
     if (placementLevelParam) {
       const level = parseInt(placementLevelParam, 10)
-      // 레벨테스트 결과에 따라 학년 추정 (저학년/고학년)
+      // 레벨테스트 결과에 따라 학년 추정
       const storedResult = sessionStorage.getItem('placement_result')
       if (storedResult) {
         const result = JSON.parse(storedResult)
-        setSelectedGrade(result.gradeLevel || 'elementary_low')
+        // result.grade가 있으면 사용, 없으면 gradeLevel을 학년으로 변환
+        if (result.grade && result.grade >= 1 && result.grade <= 6) {
+          setSelectedGrade(result.grade)
+        } else if (result.gradeLevel === 'elementary_low') {
+          setSelectedGrade(1) // 기본값 1학년
+        } else if (result.gradeLevel === 'elementary_high') {
+          setSelectedGrade(4) // 기본값 4학년
+        }
       }
     }
   }, [isLoggedIn])
 
-  // 기존 placement_level이 있으면 바로 Writing으로 리다이렉트
-  useEffect(() => {
-    if (existingPlacementLevel && isLoggedIn && !isLoading) {
-      console.log('[온보딩] 기존 placement_level 발견, Writing으로 리다이렉트')
-      router.push(`/writing?placement_level=${existingPlacementLevel}`)
-    }
-  }, [existingPlacementLevel, isLoggedIn, isLoading, router])
+  // 기존 placement_level이 있어도 자동 리다이렉트하지 않음 (사용자가 학년을 선택할 수 있도록)
+  // useEffect(() => {
+  //   if (existingPlacementLevel && isLoggedIn && !isLoading) {
+  //     console.log('[온보딩] 기존 placement_level 발견, Writing으로 리다이렉트')
+  //     router.push(`/writing?placement_level=${existingPlacementLevel}`)
+  //   }
+  // }, [existingPlacementLevel, isLoggedIn, isLoading, router])
 
   const handleContinue = async () => {
     if (!selectedGrade) return
@@ -232,9 +237,8 @@ export default function OnboardingPage() {
       }
 
       // 프로필 업데이트 또는 생성
-      const grade = selectedGrade === 'elementary_low' ? 1 : 4
       const profileData: any = {
-        grade,
+        grade: selectedGrade, // 1-6학년
       }
 
       if (placementLevel) {
@@ -285,7 +289,9 @@ export default function OnboardingPage() {
       // Placement Test 재시도 옵션이 활성화되었거나 placement_level이 없으면 Placement Test로
       else if (showPlacementOption || !existingPlacementLevel) {
         toast.success('레벨테스트를 시작합니다!')
-        router.push(`/placement?gradeLevel=${selectedGrade}${showPlacementOption ? '&retake=true' : ''}`)
+        // 학년에 따라 gradeLevel 결정 (1-3: elementary_low, 4-6: elementary_high)
+        const gradeLevel = selectedGrade! <= 3 ? 'elementary_low' : 'elementary_high'
+        router.push(`/placement?gradeLevel=${gradeLevel}${showPlacementOption ? '&retake=true' : ''}`)
       } 
       // 기존 placement_level이 있으면 Writing 페이지로 (Placement Test 건너뛰기)
       else if (existingPlacementLevel) {
@@ -323,17 +329,17 @@ export default function OnboardingPage() {
 
   console.log('[온보딩] 메인 화면 표시')
 
-  // 기존 placement_level이 있으면 로딩 화면 표시 (리다이렉트 중)
-  if (existingPlacementLevel && isLoggedIn) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">학습 페이지로 이동 중...</p>
-        </div>
-      </main>
-    )
-  }
+  // 기존 placement_level이 있어도 학년 선택 화면을 표시 (자동 리다이렉트 제거)
+  // if (existingPlacementLevel && isLoggedIn) {
+  //   return (
+  //     <main className="min-h-screen flex items-center justify-center p-4">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+  //         <p className="mt-4 text-gray-600">학습 페이지로 이동 중...</p>
+  //       </div>
+  //     </main>
+  //   )
+  // }
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
@@ -349,31 +355,25 @@ export default function OnboardingPage() {
 
         {/* 학년 선택 */}
         <div className="space-y-3">
-          <button
-            onClick={() => setSelectedGrade('elementary_low')}
-            disabled={isLoading}
-            className={`w-full px-6 py-4 rounded-lg font-medium transition-all ${
-              selectedGrade === 'elementary_low'
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="text-lg font-semibold">저학년</div>
-            <div className="text-sm mt-1">초등 1-3학년</div>
-          </button>
-
-          <button
-            onClick={() => setSelectedGrade('elementary_high')}
-            disabled={isLoading}
-            className={`w-full px-6 py-4 rounded-lg font-medium transition-all ${
-              selectedGrade === 'elementary_high'
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="text-lg font-semibold">고학년</div>
-            <div className="text-sm mt-1">초등 4-6학년</div>
-          </button>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            학년을 선택해주세요
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            {[1, 2, 3, 4, 5, 6].map((grade) => (
+              <button
+                key={grade}
+                onClick={() => setSelectedGrade(grade)}
+                disabled={isLoading}
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  selectedGrade === grade
+                    ? 'bg-indigo-600 text-white shadow-lg scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="text-lg font-semibold">{grade}학년</div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Placement Test 재시도 옵션 (기존 레벨이 있는 경우) */}

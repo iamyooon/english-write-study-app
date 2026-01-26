@@ -1,0 +1,2473 @@
+{
+  "sourceWordSet": "docs/data/elementary_vocabulary_merged.json",
+  "sourceSentenceSet": "docs/data/elementary_vocabulary_merged.json",
+  "allocationStrategy": "scoring-rebalance-v1",
+  "unitSizing": {
+    "target": 15,
+    "min": 10,
+    "max": 20
+  },
+  "sentenceCountByGrade": {
+    "1": 2,
+    "2": 2,
+    "3": 3,
+    "4": 3,
+    "5": 3,
+    "6": 3
+  },
+  "missionTypesByGrade": {
+    "1": [
+      "word_bank_fill",
+      "word_order",
+      "copy_typing"
+    ],
+    "2": [
+      "word_bank_fill",
+      "word_order",
+      "copy_typing"
+    ],
+    "3": [
+      "word_bank_fill",
+      "word_order",
+      "blank_fill",
+      "sentence_write"
+    ],
+    "4": [
+      "word_bank_fill",
+      "word_order",
+      "blank_fill",
+      "sentence_write"
+    ],
+    "5": [
+      "word_bank_fill",
+      "word_order",
+      "blank_fill",
+      "sentence_write",
+      "dictation"
+    ],
+    "6": [
+      "word_bank_fill",
+      "word_order",
+      "blank_fill",
+      "sentence_write",
+      "dictation"
+    ]
+  },
+  "grades": {
+    "1": {
+      "grade": 1,
+      "wordCount": 118,
+      "unitCount": 8,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "인사",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "a",
+            "an",
+            "and",
+            "as",
+            "at"
+          ],
+          "wordList": [
+            "a",
+            "an",
+            "and",
+            "as",
+            "at",
+            "bag",
+            "ball",
+            "be",
+            "bed",
+            "blue",
+            "book",
+            "box",
+            "by",
+            "bye",
+            "car"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "동물/색_숫자",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "cat",
+            "come",
+            "cup",
+            "do",
+            "dog"
+          ],
+          "wordList": [
+            "cat",
+            "come",
+            "cup",
+            "do",
+            "dog",
+            "door",
+            "down",
+            "eat",
+            "for",
+            "four",
+            "from",
+            "go",
+            "gray",
+            "hat",
+            "have"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "인사",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "he",
+            "hers",
+            "hi",
+            "him",
+            "his"
+          ],
+          "wordList": [
+            "he",
+            "hers",
+            "hi",
+            "him",
+            "his",
+            "I",
+            "in",
+            "it",
+            "its",
+            "like",
+            "me",
+            "mine",
+            "my",
+            "near",
+            "nine"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "색_숫자/인사",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "no",
+            "of",
+            "OK",
+            "on",
+            "one"
+          ],
+          "wordList": [
+            "no",
+            "of",
+            "OK",
+            "on",
+            "one",
+            "or",
+            "our",
+            "ours",
+            "out",
+            "pink",
+            "play",
+            "see",
+            "she",
+            "six",
+            "ten"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "인사",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "that",
+            "the",
+            "them",
+            "they",
+            "this"
+          ],
+          "wordList": [
+            "that",
+            "the",
+            "them",
+            "they",
+            "this",
+            "to",
+            "toy",
+            "tree",
+            "two",
+            "up",
+            "us",
+            "we",
+            "with",
+            "yeah",
+            "yes"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "색_숫자",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "you",
+            "about",
+            "apple",
+            "around",
+            "before"
+          ],
+          "wordList": [
+            "you",
+            "about",
+            "apple",
+            "around",
+            "before",
+            "behind",
+            "beside",
+            "black",
+            "brown",
+            "chair",
+            "drink",
+            "eight",
+            "five",
+            "green",
+            "hello"
+          ]
+        },
+        {
+          "unit": 7,
+          "topic": "인사/색_숫자",
+          "wordCount": 14,
+          "sentencesPerWord": 2,
+          "totalSentences": 28,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 84,
+          "sampleWords": [
+            "her",
+            "house",
+            "inside",
+            "itself",
+            "myself"
+          ],
+          "wordList": [
+            "her",
+            "house",
+            "inside",
+            "itself",
+            "myself",
+            "please",
+            "red",
+            "seven",
+            "sorry",
+            "thank",
+            "their",
+            "theirs",
+            "these",
+            "those"
+          ]
+        },
+        {
+          "unit": 8,
+          "topic": "색_숫자",
+          "wordCount": 14,
+          "sentencesPerWord": 2,
+          "totalSentences": 28,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 84,
+          "sampleWords": [
+            "three",
+            "white",
+            "yellow",
+            "after",
+            "between"
+          ],
+          "wordList": [
+            "three",
+            "white",
+            "yellow",
+            "after",
+            "between",
+            "goodbye",
+            "herself",
+            "himself",
+            "outside",
+            "over",
+            "table",
+            "ourselves",
+            "themselves",
+            "under"
+          ]
+        }
+      ]
+    },
+    "2": {
+      "grade": 2,
+      "wordCount": 94,
+      "unitCount": 6,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "가족_사람/동물",
+          "wordCount": 16,
+          "sentencesPerWord": 2,
+          "totalSentences": 32,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 96,
+          "sampleWords": [
+            "arm",
+            "aunt",
+            "baby",
+            "bad",
+            "bear"
+          ],
+          "wordList": [
+            "arm",
+            "aunt",
+            "baby",
+            "bad",
+            "bear",
+            "big",
+            "bird",
+            "body",
+            "boy",
+            "cake",
+            "corn",
+            "cow",
+            "dad",
+            "duck",
+            "ear",
+            "egg"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "신체",
+          "wordCount": 16,
+          "sentencesPerWord": 2,
+          "totalSentences": 32,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 96,
+          "sampleWords": [
+            "eye",
+            "face",
+            "fish",
+            "food",
+            "foot"
+          ],
+          "wordList": [
+            "eye",
+            "face",
+            "fish",
+            "food",
+            "foot",
+            "girl",
+            "goat",
+            "good",
+            "hair",
+            "hand",
+            "head",
+            "knee",
+            "leg",
+            "lion",
+            "man",
+            "meat"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "음식",
+          "wordCount": 16,
+          "sentencesPerWord": 2,
+          "totalSentences": 32,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 96,
+          "sampleWords": [
+            "milk",
+            "neck",
+            "nice",
+            "nose",
+            "pig"
+          ],
+          "wordList": [
+            "milk",
+            "neck",
+            "nice",
+            "nose",
+            "pig",
+            "rice",
+            "sad",
+            "salt",
+            "son",
+            "soup",
+            "tea",
+            "toe",
+            "banana",
+            "bread",
+            "candy",
+            "child"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "동물/음식",
+          "wordCount": 16,
+          "sentencesPerWord": 2,
+          "totalSentences": 32,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 96,
+          "sampleWords": [
+            "coffee",
+            "fruit",
+            "happy",
+            "heart",
+            "horse"
+          ],
+          "wordList": [
+            "coffee",
+            "fruit",
+            "happy",
+            "heart",
+            "horse",
+            "juice",
+            "lunch",
+            "monkey",
+            "mouse",
+            "mouth",
+            "orange",
+            "parent",
+            "potato",
+            "rabbit",
+            "sheep",
+            "small"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "가족_사람/동물",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "snake",
+            "sugar",
+            "teeth",
+            "tooth",
+            "woman"
+          ],
+          "wordList": [
+            "snake",
+            "sugar",
+            "teeth",
+            "tooth",
+            "woman",
+            "animal",
+            "butter",
+            "chicken",
+            "children",
+            "dinner",
+            "elephant",
+            "family",
+            "father",
+            "finger",
+            "grandma"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "가족_사람",
+          "wordCount": 15,
+          "sentencesPerWord": 2,
+          "totalSentences": 30,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "copy_typing"
+          ],
+          "missionTypesCount": 3,
+          "missionPoolCount": 90,
+          "sampleWords": [
+            "grandpa",
+            "mother",
+            "sister",
+            "stomach",
+            "tiger"
+          ],
+          "wordList": [
+            "grandpa",
+            "mother",
+            "sister",
+            "stomach",
+            "tiger",
+            "uncle",
+            "water",
+            "breakfast",
+            "brother",
+            "chocolate",
+            "daughter",
+            "shoulder",
+            "grandfather",
+            "grandmother",
+            "vegetable"
+          ]
+        }
+      ]
+    },
+    "3": {
+      "grade": 3,
+      "wordCount": 154,
+      "unitCount": 10,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "혼합",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "act",
+            "age",
+            "ago",
+            "air",
+            "all"
+          ],
+          "wordList": [
+            "act",
+            "age",
+            "ago",
+            "air",
+            "all",
+            "any",
+            "art",
+            "ask",
+            "away",
+            "back",
+            "band",
+            "bank",
+            "base",
+            "bath",
+            "bell",
+            "boat"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "여행_교통",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "born",
+            "both",
+            "bus",
+            "busy",
+            "buy"
+          ],
+          "wordList": [
+            "born",
+            "both",
+            "bus",
+            "busy",
+            "buy",
+            "call",
+            "can",
+            "cap",
+            "card",
+            "care",
+            "coat",
+            "cook",
+            "copy",
+            "cost",
+            "cry",
+            "cut"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "학교_학습",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "date",
+            "day",
+            "dead",
+            "dear",
+            "deep"
+          ],
+          "wordList": [
+            "date",
+            "day",
+            "dead",
+            "dear",
+            "deep",
+            "desk",
+            "die",
+            "doll",
+            "drop",
+            "dry",
+            "each",
+            "east",
+            "else",
+            "end",
+            "even",
+            "exit"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "혼합",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "fact",
+            "fail",
+            "fall",
+            "far",
+            "farm"
+          ],
+          "wordList": [
+            "fact",
+            "fail",
+            "fall",
+            "far",
+            "farm",
+            "fat",
+            "feet",
+            "few",
+            "fill",
+            "film",
+            "find",
+            "fine",
+            "fire",
+            "fix",
+            "flag",
+            "fork"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "혼합",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "free",
+            "full",
+            "gate",
+            "get",
+            "gift"
+          ],
+          "wordList": [
+            "free",
+            "full",
+            "gate",
+            "get",
+            "gift",
+            "gold",
+            "grow",
+            "half",
+            "hear",
+            "help",
+            "here",
+            "hide",
+            "high",
+            "hill",
+            "hit"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "hold",
+            "hole",
+            "home",
+            "hour",
+            "how"
+          ],
+          "wordList": [
+            "hold",
+            "hole",
+            "home",
+            "hour",
+            "how",
+            "ice",
+            "if",
+            "ill",
+            "into",
+            "job",
+            "join",
+            "jump",
+            "June",
+            "just",
+            "keep"
+          ]
+        },
+        {
+          "unit": 7,
+          "topic": "혼합",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "key",
+            "kid",
+            "kill",
+            "kind",
+            "king"
+          ],
+          "wordList": [
+            "key",
+            "kid",
+            "kill",
+            "kind",
+            "king",
+            "kite",
+            "lady",
+            "lamp",
+            "land",
+            "lay",
+            "lazy",
+            "lead",
+            "left",
+            "lend",
+            "let"
+          ]
+        },
+        {
+          "unit": 8,
+          "topic": "혼합",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "lie",
+            "life",
+            "line",
+            "list",
+            "look"
+          ],
+          "wordList": [
+            "lie",
+            "life",
+            "line",
+            "list",
+            "look",
+            "lose",
+            "lot",
+            "loud",
+            "low",
+            "luck",
+            "mad",
+            "make",
+            "many",
+            "map",
+            "mark"
+          ]
+        },
+        {
+          "unit": 9,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "may",
+            "May",
+            "mean",
+            "meet",
+            "mind"
+          ],
+          "wordList": [
+            "may",
+            "May",
+            "mean",
+            "meet",
+            "mind",
+            "move",
+            "much",
+            "must",
+            "name",
+            "new",
+            "news",
+            "none",
+            "noon",
+            "nor",
+            "not"
+          ]
+        },
+        {
+          "unit": 10,
+          "topic": "학교_학습",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "note",
+            "now",
+            "off",
+            "oh",
+            "once"
+          ],
+          "wordList": [
+            "note",
+            "now",
+            "off",
+            "oh",
+            "once",
+            "open",
+            "own",
+            "page",
+            "pair",
+            "park",
+            "part",
+            "pass",
+            "path",
+            "pay",
+            "pen"
+          ]
+        }
+      ]
+    },
+    "4": {
+      "grade": 4,
+      "wordCount": 155,
+      "unitCount": 10,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "pet",
+            "pick",
+            "poor",
+            "pop",
+            "pull"
+          ],
+          "wordList": [
+            "pet",
+            "pick",
+            "poor",
+            "pop",
+            "pull",
+            "push",
+            "put",
+            "race",
+            "rain",
+            "rich",
+            "ride",
+            "ring",
+            "rise",
+            "road",
+            "rock",
+            "room"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "rule",
+            "safe",
+            "sand",
+            "save",
+            "say"
+          ],
+          "wordList": [
+            "rule",
+            "safe",
+            "sand",
+            "save",
+            "say",
+            "seat",
+            "seem",
+            "sell",
+            "send",
+            "set",
+            "shoe",
+            "shop",
+            "show",
+            "side",
+            "sign",
+            "sir"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "혼합",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "sit",
+            "ski",
+            "skin",
+            "sky",
+            "snow"
+          ],
+          "wordList": [
+            "sit",
+            "ski",
+            "skin",
+            "sky",
+            "snow",
+            "sock",
+            "sofa",
+            "soft",
+            "some",
+            "song",
+            "stay",
+            "step",
+            "stop",
+            "such",
+            "sure",
+            "take"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "talk",
+            "taxi",
+            "team",
+            "tell",
+            "than"
+          ],
+          "wordList": [
+            "talk",
+            "taxi",
+            "team",
+            "tell",
+            "than",
+            "then",
+            "thin",
+            "tie",
+            "time",
+            "top",
+            "town",
+            "true",
+            "try",
+            "turn",
+            "TV",
+            "upon"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "날씨_계절",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 192,
+          "sampleWords": [
+            "use",
+            "wait",
+            "wake",
+            "wall",
+            "wash"
+          ],
+          "wordList": [
+            "use",
+            "wait",
+            "wake",
+            "wall",
+            "wash",
+            "way",
+            "weak",
+            "wear",
+            "well",
+            "wet",
+            "what",
+            "when",
+            "who",
+            "why",
+            "wide",
+            "will"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "학교_학습/시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "win",
+            "wing",
+            "wood",
+            "word",
+            "work"
+          ],
+          "wordList": [
+            "win",
+            "wing",
+            "wood",
+            "word",
+            "work",
+            "yet",
+            "zero",
+            "zoo",
+            "class",
+            "clean",
+            "close",
+            "Friday",
+            "give",
+            "grade",
+            "July"
+          ]
+        },
+        {
+          "unit": 7,
+          "topic": "학교_학습/시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "learn",
+            "lesson",
+            "listen",
+            "March",
+            "Monday"
+          ],
+          "wordList": [
+            "learn",
+            "lesson",
+            "listen",
+            "March",
+            "Monday",
+            "night",
+            "pencil",
+            "read",
+            "school",
+            "sleep",
+            "speak",
+            "stand",
+            "start",
+            "store",
+            "street"
+          ]
+        },
+        {
+          "unit": 8,
+          "topic": "시간_요일_달/학교_학습",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "study",
+            "Sunday",
+            "test",
+            "today",
+            "write"
+          ],
+          "wordList": [
+            "study",
+            "Sunday",
+            "test",
+            "today",
+            "write",
+            "answer",
+            "birthday",
+            "eraser",
+            "evening",
+            "homework",
+            "January",
+            "library",
+            "morning",
+            "Saturday",
+            "student"
+          ]
+        },
+        {
+          "unit": 9,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "Thursday",
+            "Tuesday",
+            "afternoon",
+            "classroom",
+            "hospital"
+          ],
+          "wordList": [
+            "Thursday",
+            "Tuesday",
+            "afternoon",
+            "classroom",
+            "hospital",
+            "November",
+            "October",
+            "teacher",
+            "September",
+            "cold",
+            "cool",
+            "dark",
+            "draw",
+            "easy",
+            "fast"
+          ]
+        },
+        {
+          "unit": 10,
+          "topic": "취미_활동/감정_느낌",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write"
+          ],
+          "missionTypesCount": 4,
+          "missionPoolCount": 180,
+          "sampleWords": [
+            "feel",
+            "fun",
+            "game",
+            "glad",
+            "hard"
+          ],
+          "wordList": [
+            "feel",
+            "fun",
+            "game",
+            "glad",
+            "hard",
+            "hope",
+            "hot",
+            "long",
+            "love",
+            "need",
+            "old",
+            "run",
+            "sing",
+            "slow",
+            "swim"
+          ]
+        }
+      ]
+    },
+    "5": {
+      "grade": 5,
+      "wordCount": 200,
+      "unitCount": 13,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "날씨_계절",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "tall",
+            "walk",
+            "want",
+            "warm",
+            "wind"
+          ],
+          "wordList": [
+            "tall",
+            "walk",
+            "want",
+            "warm",
+            "wind",
+            "able",
+            "above",
+            "accept",
+            "across",
+            "adult",
+            "afraid",
+            "ahead",
+            "album",
+            "allow",
+            "almost",
+            "along"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "시간_요일_달",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "among",
+            "angry",
+            "anyone",
+            "autumn",
+            "basket"
+          ],
+          "wordList": [
+            "among",
+            "angry",
+            "anyone",
+            "autumn",
+            "basket",
+            "become",
+            "begin",
+            "below",
+            "bench",
+            "boring",
+            "bottle",
+            "break",
+            "bridge",
+            "bright",
+            "bring",
+            "build"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "날씨_계절",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "camera",
+            "carry",
+            "catch",
+            "change",
+            "cheap"
+          ],
+          "wordList": [
+            "camera",
+            "carry",
+            "catch",
+            "change",
+            "cheap",
+            "check",
+            "cheese",
+            "circle",
+            "clear",
+            "climb",
+            "clock",
+            "cloud",
+            "cloudy",
+            "color",
+            "count",
+            "course"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "색_숫자",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "cousin",
+            "dirty",
+            "dress",
+            "during",
+            "eighty"
+          ],
+          "wordList": [
+            "cousin",
+            "dirty",
+            "dress",
+            "during",
+            "eighty",
+            "eleven",
+            "empty",
+            "enjoy",
+            "enough",
+            "ever",
+            "every",
+            "excuse",
+            "field",
+            "fifty",
+            "fight",
+            "finish"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "색_숫자",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "first",
+            "floor",
+            "fly",
+            "forty",
+            "fresh"
+          ],
+          "wordList": [
+            "first",
+            "floor",
+            "fly",
+            "forty",
+            "fresh",
+            "front",
+            "funny",
+            "garden",
+            "glass",
+            "grass",
+            "great",
+            "ground",
+            "group",
+            "guess",
+            "guitar",
+            "heavy"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "혼합",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "hobby",
+            "hungry",
+            "hurry",
+            "jacket",
+            "knife"
+          ],
+          "wordList": [
+            "hobby",
+            "hungry",
+            "hurry",
+            "jacket",
+            "knife",
+            "knock",
+            "large",
+            "laugh",
+            "leave",
+            "light",
+            "little",
+            "live",
+            "market",
+            "marry",
+            "match"
+          ]
+        },
+        {
+          "unit": 7,
+          "topic": "취미_활동",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "meal",
+            "minute",
+            "miss",
+            "money",
+            "movie"
+          ],
+          "wordList": [
+            "meal",
+            "minute",
+            "miss",
+            "money",
+            "movie",
+            "music",
+            "ninety",
+            "nobody",
+            "noise",
+            "north",
+            "notice",
+            "office",
+            "only",
+            "paint",
+            "pants"
+          ]
+        },
+        {
+          "unit": 8,
+          "topic": "장소",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "party",
+            "peace",
+            "person",
+            "phone",
+            "photo"
+          ],
+          "wordList": [
+            "party",
+            "peace",
+            "person",
+            "phone",
+            "photo",
+            "piano",
+            "picnic",
+            "piece",
+            "place",
+            "plate",
+            "pocket",
+            "point",
+            "police",
+            "post",
+            "price"
+          ]
+        },
+        {
+          "unit": 9,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "queen",
+            "quick",
+            "quiet",
+            "radio",
+            "rainy"
+          ],
+          "wordList": [
+            "queen",
+            "quick",
+            "quiet",
+            "radio",
+            "rainy",
+            "raise",
+            "rent",
+            "right",
+            "robot",
+            "round",
+            "season",
+            "second",
+            "secret",
+            "shake",
+            "shall"
+          ]
+        },
+        {
+          "unit": 10,
+          "topic": "날씨_계절",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "shape",
+            "share",
+            "shirt",
+            "short",
+            "should"
+          ],
+          "wordList": [
+            "shape",
+            "share",
+            "shirt",
+            "short",
+            "should",
+            "shout",
+            "silent",
+            "simple",
+            "since",
+            "sixty",
+            "skate",
+            "smell",
+            "smile",
+            "smoke",
+            "snowy"
+          ]
+        },
+        {
+          "unit": 11,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "sound",
+            "south",
+            "spell",
+            "spend",
+            "sport"
+          ],
+          "wordList": [
+            "sound",
+            "south",
+            "spell",
+            "spend",
+            "sport",
+            "spring",
+            "square",
+            "stamp",
+            "stick",
+            "stone",
+            "storm",
+            "story",
+            "strong",
+            "sunny",
+            "sweet"
+          ]
+        },
+        {
+          "unit": 12,
+          "topic": "색_숫자",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "taste",
+            "teach",
+            "tennis",
+            "there",
+            "thick"
+          ],
+          "wordList": [
+            "taste",
+            "teach",
+            "tennis",
+            "there",
+            "thick",
+            "thing",
+            "third",
+            "thirty",
+            "throw",
+            "tired",
+            "touch",
+            "truck",
+            "twelve",
+            "twenty",
+            "twice"
+          ]
+        },
+        {
+          "unit": 13,
+          "topic": "시간_요일_달/취미_활동",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "ugly",
+            "video",
+            "violin",
+            "waste",
+            "watch"
+          ],
+          "wordList": [
+            "ugly",
+            "video",
+            "violin",
+            "waste",
+            "watch",
+            "west",
+            "where",
+            "which",
+            "window",
+            "wrong",
+            "young",
+            "pretty",
+            "summer",
+            "winter",
+            "dance"
+          ]
+        }
+      ]
+    },
+    "6": {
+      "grade": 6,
+      "wordCount": 200,
+      "unitCount": 13,
+      "units": [
+        {
+          "unit": 1,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "weather",
+            "beautiful",
+            "interesting",
+            "also",
+            "idea"
+          ],
+          "wordList": [
+            "weather",
+            "beautiful",
+            "interesting",
+            "also",
+            "idea",
+            "know",
+            "lake",
+            "last",
+            "late",
+            "next",
+            "past",
+            "plan",
+            "sea",
+            "soon",
+            "too",
+            "very"
+          ]
+        },
+        {
+          "unit": 2,
+          "topic": "시간_요일_달/장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "week",
+            "year",
+            "again",
+            "always",
+            "beach"
+          ],
+          "wordList": [
+            "week",
+            "year",
+            "again",
+            "always",
+            "beach",
+            "choose",
+            "decide",
+            "dream",
+            "forget",
+            "island",
+            "month",
+            "often",
+            "quite",
+            "still",
+            "think",
+            "active"
+          ]
+        },
+        {
+          "unit": 3,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "address",
+            "already",
+            "amazing",
+            "anybody",
+            "anything"
+          ],
+          "wordList": [
+            "address",
+            "already",
+            "amazing",
+            "anybody",
+            "anything",
+            "arrive",
+            "balloon",
+            "bicycle",
+            "building",
+            "center",
+            "city",
+            "clever",
+            "clothes",
+            "corner",
+            "country",
+            "cover"
+          ]
+        },
+        {
+          "unit": 4,
+          "topic": "색_숫자",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "drive",
+            "early",
+            "eighteen",
+            "either",
+            "enter"
+          ],
+          "wordList": [
+            "drive",
+            "early",
+            "eighteen",
+            "either",
+            "enter",
+            "everyone",
+            "example",
+            "exercise",
+            "famous",
+            "farmer",
+            "favorite",
+            "fifteen",
+            "football",
+            "forest",
+            "fourteen",
+            "hundred"
+          ]
+        },
+        {
+          "unit": 5,
+          "topic": "장소",
+          "wordCount": 16,
+          "sentencesPerWord": 3,
+          "totalSentences": 48,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 240,
+          "sampleWords": [
+            "husband",
+            "kitchen",
+            "language",
+            "later",
+            "letter"
+          ],
+          "wordList": [
+            "husband",
+            "kitchen",
+            "language",
+            "later",
+            "letter",
+            "machine",
+            "matter",
+            "member",
+            "mountain",
+            "neighbor",
+            "never",
+            "nineteen",
+            "nothing",
+            "number",
+            "o'clock",
+            "offer"
+          ]
+        },
+        {
+          "unit": 6,
+          "topic": "취미_활동",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "order",
+            "other",
+            "paper",
+            "perhaps",
+            "picture"
+          ],
+          "wordList": [
+            "order",
+            "other",
+            "paper",
+            "perhaps",
+            "picture",
+            "player",
+            "popular",
+            "practice",
+            "program",
+            "ready",
+            "real",
+            "repair",
+            "repeat",
+            "rest",
+            "return"
+          ]
+        },
+        {
+          "unit": 7,
+          "topic": "색_숫자",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "river",
+            "seventy",
+            "ship",
+            "singer",
+            "sixteen"
+          ],
+          "wordList": [
+            "river",
+            "seventy",
+            "ship",
+            "singer",
+            "sixteen",
+            "size",
+            "someone",
+            "straight",
+            "strange",
+            "super",
+            "supper",
+            "surprise",
+            "swimming",
+            "thirteen",
+            "thousand"
+          ]
+        },
+        {
+          "unit": 8,
+          "topic": "시간_요일_달",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "through",
+            "tomorrow",
+            "tonight",
+            "trouble",
+            "umbrella"
+          ],
+          "wordList": [
+            "through",
+            "tomorrow",
+            "tonight",
+            "trouble",
+            "umbrella",
+            "until",
+            "useful",
+            "usual",
+            "village",
+            "welcome",
+            "wonder",
+            "present",
+            "really",
+            "sometimes",
+            "usually"
+          ]
+        },
+        {
+          "unit": 9,
+          "topic": "건강/과학_자연",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "yesterday",
+            "remember",
+            "understand",
+            "hurt",
+            "moon"
+          ],
+          "wordList": [
+            "yesterday",
+            "remember",
+            "understand",
+            "hurt",
+            "moon",
+            "sick",
+            "star",
+            "sun",
+            "trip",
+            "doctor",
+            "earth",
+            "health",
+            "hotel",
+            "nurse",
+            "people"
+          ]
+        },
+        {
+          "unit": 10,
+          "topic": "여행_교통/과학_자연",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "plane",
+            "plant",
+            "space",
+            "ticket",
+            "train"
+          ],
+          "wordList": [
+            "plane",
+            "plant",
+            "space",
+            "ticket",
+            "train",
+            "travel",
+            "visit",
+            "world",
+            "airport",
+            "dentist",
+            "flower",
+            "holiday",
+            "action",
+            "another",
+            "careful"
+          ]
+        },
+        {
+          "unit": 11,
+          "topic": "여행_교통",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "computer",
+            "everything",
+            "friendly",
+            "motorcycle",
+            "quarter"
+          ],
+          "wordList": [
+            "computer",
+            "everything",
+            "friendly",
+            "motorcycle",
+            "quarter",
+            "serious",
+            "seventeen",
+            "several",
+            "something",
+            "special",
+            "subject",
+            "telephone",
+            "terrible",
+            "vacation",
+            "science"
+          ]
+        },
+        {
+          "unit": 12,
+          "topic": "혼합",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "law",
+            "war",
+            "agree",
+            "problem",
+            "reason"
+          ],
+          "wordList": [
+            "law",
+            "war",
+            "agree",
+            "problem",
+            "reason",
+            "difficult",
+            "important",
+            "activity",
+            "dangerous",
+            "delicious",
+            "interest",
+            "newspaper",
+            "question",
+            "receive",
+            "restaurant"
+          ]
+        },
+        {
+          "unit": 13,
+          "topic": "가족_사람",
+          "wordCount": 15,
+          "sentencesPerWord": 3,
+          "totalSentences": 45,
+          "missionTypes": [
+            "word_bank_fill",
+            "word_order",
+            "blank_fill",
+            "sentence_write",
+            "dictation"
+          ],
+          "missionTypesCount": 5,
+          "missionPoolCount": 225,
+          "sampleWords": [
+            "station",
+            "but",
+            "more",
+            "most",
+            "same"
+          ],
+          "wordList": [
+            "station",
+            "but",
+            "more",
+            "most",
+            "same",
+            "so",
+            "alone",
+            "best",
+            "friend",
+            "though",
+            "because",
+            "better",
+            "different",
+            "together",
+            "apartment"
+          ]
+        }
+      ]
+    }
+  }
+}

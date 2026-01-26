@@ -1,0 +1,201 @@
+{
+  "units": [
+    {
+      "unitNumber": 1,
+      "title": "인사와 기본 표현",
+      "level": 1,
+      "gradeLevel": "elementary_low",
+      "topic": "인사하기",
+      "targetWords": [
+        "hello", "hi", "goodbye", "thank", "please", "sorry",
+        "yes", "no", "I", "you", "he", "she", "it", "we", "they"
+      ],
+      "missionCount": 10,
+      "description": "기본적인 인사와 대명사 학습"
+    },
+    {
+      "unitNumber": 2,
+      "title": "가족과 사람",
+      "level": 1,
+      "gradeLevel": "elementary_low",
+      "topic": "가족",
+      "targetWords": [
+        "family", "father", "mother", "brother", "sister",
+        "aunt", "uncle", "grandfather", "grandmother", "baby", "child", "children"
+      ],
+      "missionCount": 12,
+      "description": "가족 구성원과 사람에 대한 단어 학습"
+    },
+    {
+      "unitNumber": 3,
+      "title": "숫자와 색깔",
+      "level": 1,
+      "gradeLevel": "elementary_low",
+      "topic": "숫자/색깔",
+      "targetWords": [
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+        "red", "blue", "green", "yellow", "black", "white", "brown", "pink", "orange"
+      ],
+      "missionCount": 15,
+      "description": "기본 숫자와 색깔 단어 학습"
+    },
+    {
+      "unitNumber": 4,
+      "title": "동물",
+      "level": 2,
+      "gradeLevel": "elementary_low",
+      "topic": "동물",
+      "targetWords": [
+        "animal", "dog", "cat", "bird", "fish", "rabbit", "horse", "cow",
+        "pig", "elephant", "tiger", "lion", "monkey", "duck", "chicken"
+      ],
+      "missionCount": 12,
+      "description": "동물 이름과 특징 학습"
+    },
+    {
+      "unitNumber": 5,
+      "title": "음식",
+      "level": 2,
+      "gradeLevel": "elementary_low",
+      "topic": "음식",
+      "targetWords": [
+        "food", "apple", "banana", "bread", "rice", "milk", "water",
+        "egg", "cake", "candy", "chocolate", "breakfast", "lunch", "dinner"
+      ],
+      "missionCount": 12,
+      "description": "음식과 식사 시간 표현 학습"
+    },
+    {
+      "unitNumber": 6,
+      "title": "학교와 학습",
+      "level": 3,
+      "gradeLevel": "elementary_low",
+      "topic": "학교",
+      "targetWords": [
+        "school", "teacher", "student", "class", "classroom", "book",
+        "pencil", "pen", "study", "learn", "homework", "test", "grade"
+      ],
+      "missionCount": 12,
+      "description": "학교 생활과 학습 관련 단어 학습"
+    },
+    {
+      "unitNumber": 7,
+      "title": "일상생활",
+      "level": 3,
+      "gradeLevel": "elementary_low",
+      "topic": "일상생활",
+      "targetWords": [
+        "morning", "afternoon", "evening", "night", "day", "week",
+        "month", "year", "today", "tomorrow", "yesterday", "now"
+      ],
+      "missionCount": 10,
+      "description": "시간 표현과 일상 생활 패턴 학습"
+    },
+    {
+      "unitNumber": 8,
+      "title": "감정과 느낌",
+      "level": 4,
+      "gradeLevel": "elementary_low",
+      "topic": "감정",
+      "targetWords": [
+        "happy", "sad", "angry", "excited", "tired", "afraid",
+        "surprised", "worried", "feel", "like", "love", "enjoy"
+      ],
+      "missionCount": 12,
+      "description": "감정 표현과 느낌 전달 학습"
+    },
+    {
+      "unitNumber": 9,
+      "title": "취미와 활동",
+      "level": 4,
+      "gradeLevel": "elementary_low",
+      "topic": "취미",
+      "targetWords": [
+        "hobby", "play", "game", "sport", "music", "sing", "dance",
+        "read", "draw", "swim", "run", "walk", "fun", "interesting"
+      ],
+      "missionCount": 12,
+      "description": "취미 활동과 여가 시간 표현 학습"
+    },
+    {
+      "unitNumber": 10,
+      "title": "장소와 여행",
+      "level": 5,
+      "gradeLevel": "elementary_high",
+      "topic": "여행",
+      "targetWords": [
+        "place", "home", "house", "school", "park", "beach", "mountain",
+        "city", "country", "travel", "visit", "trip", "vacation"
+      ],
+      "missionCount": 12,
+      "description": "장소 표현과 여행 관련 단어 학습"
+    },
+    {
+      "unitNumber": 11,
+      "title": "날씨와 계절",
+      "level": 5,
+      "gradeLevel": "elementary_high",
+      "topic": "날씨",
+      "targetWords": [
+        "weather", "sunny", "rainy", "cloudy", "snowy", "hot", "cold",
+        "warm", "cool", "spring", "summer", "autumn", "winter"
+      ],
+      "missionCount": 12,
+      "description": "날씨와 계절 표현 학습"
+    },
+    {
+      "unitNumber": 12,
+      "title": "신체와 건강",
+      "level": 6,
+      "gradeLevel": "elementary_high",
+      "topic": "건강",
+      "targetWords": [
+        "body", "head", "eye", "ear", "nose", "mouth", "hand", "foot",
+        "leg", "arm", "health", "sick", "doctor", "hospital"
+      ],
+      "missionCount": 12,
+      "description": "신체 부위와 건강 관련 단어 학습"
+    },
+    {
+      "unitNumber": 13,
+      "title": "과학과 자연",
+      "level": 7,
+      "gradeLevel": "elementary_high",
+      "topic": "과학",
+      "targetWords": [
+        "science", "nature", "earth", "sun", "moon", "star", "water",
+        "air", "fire", "plant", "tree", "flower", "animal"
+      ],
+      "missionCount": 12,
+      "description": "과학과 자연 현상 관련 단어 학습"
+    },
+    {
+      "unitNumber": 14,
+      "title": "사회와 문화",
+      "level": 8,
+      "gradeLevel": "elementary_high",
+      "topic": "사회",
+      "targetWords": [
+        "country", "city", "people", "culture", "tradition", "festival",
+        "holiday", "celebrate", "community", "society", "world"
+      ],
+      "missionCount": 12,
+      "description": "사회와 문화 관련 단어 학습"
+    },
+    {
+      "unitNumber": 15,
+      "title": "미래와 꿈",
+      "level": 9,
+      "gradeLevel": "elementary_high",
+      "topic": "미래",
+      "targetWords": [
+        "future", "dream", "hope", "wish", "goal", "achieve", "success",
+        "challenge", "opportunity", "plan", "develop", "improve"
+      ],
+      "missionCount": 12,
+      "description": "미래 계획과 목표 표현 학습"
+    }
+  ],
+  "totalUnits": 15,
+  "totalMissions": 180
+}

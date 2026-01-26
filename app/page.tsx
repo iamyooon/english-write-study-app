@@ -35,10 +35,25 @@ export default function HomePage() {
         if (!isMounted) return
 
         if (session && !error) {
-          // 로그인되어 있으면 writing 페이지로 리다이렉트
-          console.log('로그인 상태 확인됨, writing으로 리다이렉트')
+          console.log('로그인 상태 확인됨, 프로필 확인 후 리다이렉트')
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('grade')
+            .eq('id', session.user.id)
+            .maybeSingle()
+
+          const profileData = profile as { grade?: number } | null
+          const hasGrade =
+            !!profileData?.grade &&
+            profileData.grade >= 1 &&
+            profileData.grade <= 6
+
+          if (profileError) {
+            console.warn('프로필 조회 오류:', profileError)
+          }
+
           setIsLoading(false) // 리다이렉트 전에 로딩 상태 해제
-          router.replace('/writing')
+          router.replace(hasGrade ? '/writing' : '/onboarding')
           return
         }
         

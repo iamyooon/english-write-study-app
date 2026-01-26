@@ -1,0 +1,169 @@
+{
+  "level1": {
+    "description": "기초 단어 - Drag & Drop (초등 저학년)",
+    "wordCount": 100,
+    "categories": [
+      "기본 관사/대명사",
+      "기본 명사 (구체적)",
+      "기본 동사 (일상)",
+      "색깔",
+      "숫자 (1-10)"
+    ],
+    "sampleWords": [
+      "a", "an", "the", "I", "you", "he", "she", "it", "we", "they",
+      "apple", "book", "cat", "dog", "ball", "car", "house", "tree",
+      "go", "come", "see", "eat", "drink", "play", "like", "have",
+      "red", "blue", "green", "yellow", "black", "white",
+      "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"
+    ]
+  },
+  "level2": {
+    "description": "기초 확장 - Drag & Drop (초등 저학년)",
+    "wordCount": 100,
+    "categories": [
+      "가족",
+      "동물",
+      "음식",
+      "신체 부위",
+      "기본 형용사"
+    ],
+    "sampleWords": [
+      "father", "mother", "brother", "sister", "family",
+      "bird", "fish", "rabbit", "horse", "cow",
+      "bread", "rice", "milk", "water", "egg", "cake",
+      "head", "eye", "ear", "nose", "mouth", "hand", "foot",
+      "big", "small", "good", "bad", "happy", "sad"
+    ]
+  },
+  "level3": {
+    "description": "기초 문장 구성 (초등 저학년)",
+    "wordCount": 150,
+    "categories": [
+      "학교",
+      "일상생활",
+      "시간 표현",
+      "장소",
+      "기본 동사 확장"
+    ],
+    "sampleWords": [
+      "school", "teacher", "student", "class", "book", "pencil",
+      "morning", "afternoon", "evening", "night", "day", "today",
+      "home", "park", "store", "hospital", "library",
+      "get", "give", "take", "make", "do", "say", "tell"
+    ]
+  },
+  "level4": {
+    "description": "기초 문장 확장 (초등 저학년)",
+    "wordCount": 150,
+    "categories": [
+      "감정",
+      "취미",
+      "날씨",
+      "계절",
+      "형용사 확장"
+    ],
+    "sampleWords": [
+      "feel", "love", "enjoy", "want", "need", "hope",
+      "game", "sport", "music", "sing", "dance", "read",
+      "sunny", "rainy", "cloudy", "hot", "cold", "warm",
+      "spring", "summer", "autumn", "winter",
+      "beautiful", "nice", "fun", "interesting", "easy", "hard"
+    ]
+  },
+  "level5": {
+    "description": "확장 어휘 (초등 고학년)",
+    "wordCount": 200,
+    "categories": [
+      "추상 개념",
+      "시간 표현 확장",
+      "장소 확장",
+      "복합 동사",
+      "부사"
+    ],
+    "sampleWords": [
+      "idea", "thought", "dream", "wish", "plan", "goal",
+      "yesterday", "tomorrow", "week", "month", "year", "always", "often", "sometimes",
+      "city", "country", "beach", "mountain", "forest",
+      "understand", "remember", "forget", "decide", "choose",
+      "very", "really", "quite", "too", "also", "again"
+    ]
+  },
+  "level6": {
+    "description": "확장 어휘 심화 (초등 고학년)",
+    "wordCount": 200,
+    "categories": [
+      "여행",
+      "문화",
+      "건강",
+      "과학",
+      "사회"
+    ],
+    "sampleWords": [
+      "travel", "visit", "trip", "vacation", "hotel",
+      "culture", "tradition", "festival", "holiday", "celebrate",
+      "health", "sick", "doctor", "hospital", "medicine",
+      "science", "nature", "earth", "sun", "moon", "star",
+      "people", "community", "society", "world"
+    ]
+  },
+  "level7": {
+    "description": "고급 어휘 (초등 고학년)",
+    "wordCount": 150,
+    "categories": [
+      "학술적 어휘",
+      "감정 심화",
+      "의견 표현",
+      "복합 개념"
+    ],
+    "sampleWords": [
+      "experiment", "research", "study", "learn", "education",
+      "excited", "disappointed", "worried", "surprised", "proud",
+      "think", "believe", "opinion", "agree", "disagree",
+      "important", "necessary", "possible", "difficult", "challenge"
+    ]
+  },
+  "level8": {
+    "description": "고급 어휘 확장 (초등 고학년)",
+    "wordCount": 150,
+    "categories": [
+      "추상 개념 심화",
+      "관계 표현",
+      "원인/결과",
+      "비교/대조"
+    ],
+    "sampleWords": [
+      "achieve", "success", "failure", "opportunity", "chance",
+      "friend", "relationship", "together", "alone", "help",
+      "because", "so", "but", "however", "although",
+      "more", "most", "better", "best", "different", "same"
+    ]
+  },
+  "level9": {
+    "description": "심화 어휘 (초등 고학년)",
+    "wordCount": 100,
+    "categories": [
+      "고급 추상 개념",
+      "복합 표현",
+      "학술적 어휘"
+    ],
+    "sampleWords": [
+      "develop", "improve", "create", "discover", "explore",
+      "environment", "system", "method", "process", "result",
+      "knowledge", "information", "experience", "skill", "ability"
+    ]
+  },
+  "level10": {
+    "description": "심화 어휘 최고급 (초등 고학년)",
+    "wordCount": 100,
+    "categories": [
+      "최고급 추상 개념",
+      "복잡한 표현",
+      "전문 용어"
+    ],
+    "sampleWords": [
+      "analyze", "evaluate", "examine", "investigate", "research",
+      "concept", "theory", "principle", "strategy", "solution",
+      "communication", "cooperation", "organization", "management"
+    ]
+  }
+}

@@ -25,8 +25,24 @@ export default function SignupPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (session) {
-        // 이미 로그인되어 있으면 writing 페이지로 리다이렉트
-        router.replace('/writing')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('grade')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        const profileData = profile as { grade?: number } | null
+        const hasGrade =
+          !!profileData?.grade &&
+          profileData.grade >= 1 &&
+          profileData.grade <= 6
+
+        if (profileError) {
+          console.warn('[회원가입] 프로필 조회 오류:', profileError)
+        }
+
+        // 이미 로그인되어 있으면 온보딩/학습으로 리다이렉트
+        router.replace(hasGrade ? '/writing' : '/onboarding')
       }
     }
     
