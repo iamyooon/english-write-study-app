@@ -75,8 +75,8 @@ export default function WritingPage() {
       } = await supabase.auth.getSession()
 
       if (!session) {
-        // 세션이 없으면 온보딩으로 리다이렉트
-        window.location.href = '/onboarding'
+        // 세션이 없으면 온보딩으로 즉시 리다이렉트 (화면 렌더링 없이)
+        router.replace('/onboarding')
         return
       }
 
@@ -99,9 +99,13 @@ export default function WritingPage() {
         // 타입 단언 (Supabase 타입 추론 문제 해결)
         const profileData = profile as { grade?: number } | null
 
-        if (profileData && profileData.grade && profileData.grade >= 1 && profileData.grade <= 6) {
-          setGrade(profileData.grade)
+        // 학년이 없으면 즉시 온보딩으로 리다이렉트 (화면 렌더링 없이)
+        if (!profileData || !profileData.grade || profileData.grade < 1 || profileData.grade > 6) {
+          router.replace('/onboarding')
+          return
         }
+
+        setGrade(profileData.grade)
 
         // 에너지 정보 가져오기
         const profileWithEnergy = profileData as { energy?: number } | null
@@ -391,26 +395,16 @@ export default function WritingPage() {
     }
   }
 
-  // 학년이 선택되지 않았으면 온보딩 페이지로 리다이렉트
+  // 학년이 선택되지 않았으면 온보딩 페이지로 즉시 리다이렉트 (화면 렌더링 없이)
   useEffect(() => {
     if (grade === null) {
-      const timer = setTimeout(() => {
-        router.push('/onboarding')
-      }, 100)
-      return () => clearTimeout(timer)
+      router.replace('/onboarding')
     }
   }, [grade, router])
 
-  // 학년이 선택되지 않았으면 로딩 화면 표시
+  // 학년이 선택되지 않았으면 아무것도 렌더링하지 않음 (리다이렉트 중)
   if (grade === null) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">학습 준비 중...</p>
-        </div>
-      </main>
-    )
+    return null
   }
 
   // Drag & Drop 모드 렌더링 (저학년 1-3학년)

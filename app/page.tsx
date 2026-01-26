@@ -52,8 +52,9 @@ export default function HomePage() {
             console.warn('프로필 조회 오류:', profileError)
           }
 
-          setIsLoading(false) // 리다이렉트 전에 로딩 상태 해제
-          router.replace(hasGrade ? '/writing' : '/onboarding')
+          // 로딩 화면을 보여주지 않고 즉시 리다이렉트
+          const targetPath = hasGrade ? '/writing' : '/onboarding'
+          router.replace(targetPath)
           return
         }
         
@@ -63,9 +64,6 @@ export default function HomePage() {
         console.error('세션 확인 오류:', error)
         if (isMounted) {
           setIsLoggedIn(false)
-        }
-      } finally {
-        if (isMounted) {
           setIsLoading(false)
         }
       }
@@ -78,15 +76,9 @@ export default function HomePage() {
     }
   }, [router])
 
+  // 로그인된 사용자는 아무것도 렌더링하지 않음 (리다이렉트 중)
   if (isLoading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">로딩 중...</p>
-        </div>
-      </main>
-    )
+    return null
   }
 
   // 로그인하지 않은 경우에만 로그인/회원가입 화면 표시
