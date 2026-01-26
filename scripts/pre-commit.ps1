@@ -70,11 +70,12 @@ $testResultsFilePath = Join-Path $env:TEMP "pre-commit-test-results.txt"
 $testResultsContent | Out-File -FilePath $testResultsFilePath -Encoding UTF8
 Write-Host "📝 테스트 결과 저장: $testResultsFilePath" -ForegroundColor Cyan
 
-# 4. 문서 업데이트 (자동으로 최신 상태 반영)
-Write-Host "📚 문서 업데이트 중..." -ForegroundColor Yellow
-node scripts/update-docs.js
+# 4. 문서 업데이트 필요성 확인
+Write-Host ""
+Write-Host "📚 문서 업데이트 확인 중..." -ForegroundColor Yellow
+node scripts/check-docs-update.cjs
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "⚠️  문서 업데이트 실패 (계속 진행)" -ForegroundColor Yellow
+    Write-Host "⚠️  문서 확인 중 오류 발생 (계속 진행)" -ForegroundColor Yellow
 }
 
 # 5. 문서 업데이트로 인한 변경사항을 스테이징 영역에 추가
