@@ -60,43 +60,10 @@ export async function updateSession(request: NextRequest) {
   const isGuestPath = guestPaths.some((path) => pathname.startsWith(path))
   const isHomePage = pathname === '/'
 
-  // 홈페이지 접근 시 로그인된 사용자 리다이렉트 처리 (서버 사이드)
+  // 홈페이지 접근 시 로그인된 사용자는 무조건 온보딩으로 리다이렉트
+  // 온보딩에서 "학습 시작하기"를 눌러야만 /writing으로 이동
   if (isHomePage && user) {
-    try {
-      // 프로필에서 학년 확인
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('grade')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (profileError) {
-        console.error('미들웨어 프로필 조회 오류:', profileError)
-        // 프로필 조회 실패 시 온보딩으로 보냄 (안전한 선택)
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-
-      const profileData = profile as { grade?: number } | null
-      const hasGrade =
-        !!profileData?.grade &&
-        typeof profileData.grade === 'number' &&
-        profileData.grade >= 1 &&
-        profileData.grade <= 6
-
-      if (hasGrade) {
-        // 학년이 있으면 /writing?grade={grade}로 리다이렉트
-        const redirectUrl = new URL('/writing', request.url)
-        redirectUrl.searchParams.set('grade', profileData.grade.toString())
-        return NextResponse.redirect(redirectUrl)
-      } else {
-        // 학년이 없으면 /onboarding으로 리다이렉트 (홈 → 온보딩 → writing 순서)
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-    } catch (error) {
-      // 프로필 조회 실패 시 온보딩으로 보냄 (안전한 선택)
-      console.error('미들웨어 프로필 조회 오류:', error)
-      return NextResponse.redirect(new URL('/onboarding', request.url))
-    }
+    return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
   // 로그인하지 않은 사용자가 보호된 경로 접근 시

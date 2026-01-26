@@ -29,24 +29,9 @@ export default function HomePage() {
         if (!isMounted) return
 
         if (session && !error) {
-          // 미들웨어에서 이미 리다이렉트 처리했지만, 혹시 모를 경우를 대비해 클라이언트에서도 처리
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('grade')
-            .eq('id', session.user.id)
-            .maybeSingle()
-
-          const profileData = profile as { grade?: number } | null
-          const hasGrade =
-            !!profileData?.grade &&
-            profileData.grade >= 1 &&
-            profileData.grade <= 6
-
-          if (hasGrade) {
-            router.replace(`/writing?grade=${profileData.grade}`)
-          } else {
-            router.replace('/onboarding')
-          }
+          // 로그인된 사용자는 무조건 온보딩으로 리다이렉트
+          // 온보딩에서 "학습 시작하기"를 눌러야만 /writing으로 이동
+          router.replace('/onboarding')
           return
         }
         
