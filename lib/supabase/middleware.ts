@@ -64,15 +64,22 @@ export async function updateSession(request: NextRequest) {
   if (isHomePage && user) {
     try {
       // 프로필에서 학년 확인
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('grade')
         .eq('id', user.id)
         .maybeSingle()
 
+      if (profileError) {
+        console.error('미들웨어 프로필 조회 오류:', profileError)
+        // 프로필 조회 실패 시 온보딩으로 보냄 (안전한 선택)
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+
       const profileData = profile as { grade?: number } | null
       const hasGrade =
         !!profileData?.grade &&
+        typeof profileData.grade === 'number' &&
         profileData.grade >= 1 &&
         profileData.grade <= 6
 
@@ -82,12 +89,13 @@ export async function updateSession(request: NextRequest) {
         redirectUrl.searchParams.set('grade', profileData.grade.toString())
         return NextResponse.redirect(redirectUrl)
       } else {
-        // 학년이 없으면 /onboarding으로 리다이렉트
+        // 학년이 없으면 /onboarding으로 리다이렉트 (홈 → 온보딩 → writing 순서)
         return NextResponse.redirect(new URL('/onboarding', request.url))
       }
     } catch (error) {
-      // 프로필 조회 실패 시 기본 동작 (클라이언트에서 처리)
+      // 프로필 조회 실패 시 온보딩으로 보냄 (안전한 선택)
       console.error('미들웨어 프로필 조회 오류:', error)
+      return NextResponse.redirect(new URL('/onboarding', request.url))
     }
   }
 
@@ -96,6 +104,55 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = new URL('/onboarding', request.url)
     redirectUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(redirectUrl)
+  }
+
+  // 로그인한 사용자가 /writing 접근 시 학년 확인
+  if (pathname.startsWith('/writing') && user) {
+    try {
+      // URL 파라미터에 학년이 있으면 통과
+      const gradeParam = request.nextUrl.searchParams.get('grade')
+      if (gradeParam) {
+        const gradeValue = parseInt(gradeParam, 10)
+        if (gradeValue >= 1 && gradeValue <= 6) {
+          // 학년 파라미터가 유효하면 통과
+          return supabaseResponse
+        }
+      }
+
+      // URL 파라미터에 학년이 없으면 프로필에서 확인
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('grade')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        console.error('미들웨어 /writing 프로필 조회 오류:', profileError)
+        // 프로필 조회 실패 시 온보딩으로 보냄
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+
+      const profileData = profile as { grade?: number } | null
+      const hasGrade =
+        !!profileData?.grade &&
+        typeof profileData.grade === 'number' &&
+        profileData.grade >= 1 &&
+        profileData.grade <= 6
+
+      if (!hasGrade) {
+        // 학년이 없으면 /onboarding으로 리다이렉트
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+
+      // 학년이 있으면 URL 파라미터에 추가하여 리다이렉트
+      const redirectUrl = new URL('/writing', request.url)
+      redirectUrl.searchParams.set('grade', profileData.grade.toString())
+      return NextResponse.redirect(redirectUrl)
+    } catch (error) {
+      console.error('미들웨어 /writing 처리 오류:', error)
+      // 오류 발생 시 온보딩으로 보냄
+      return NextResponse.redirect(new URL('/onboarding', request.url))
+    }
   }
 
   // 로그인한 사용자가 인증 페이지 접근 시
