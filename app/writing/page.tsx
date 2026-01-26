@@ -67,11 +67,13 @@ export default function WritingPage() {
     return null
   }
 
-  const [grade, setGrade] = useState<number | null>(getInitialGrade()) // 1-6학년, null이면 학년 선택 안됨
+  const initialGrade = getInitialGrade()
+  const [grade, setGrade] = useState<number | null>(initialGrade) // 1-6학년, null이면 학년 선택 안됨
   const [gradeLevel, setGradeLevel] = useState<'elementary_low' | 'elementary_high' | null>(
-    getInitialGrade() ? (getInitialGrade()! <= 3 ? 'elementary_low' : 'elementary_high') : null
+    initialGrade ? (initialGrade <= 3 ? 'elementary_low' : 'elementary_high') : null
   ) // grade에 따라 자동 설정
   const [energy, setEnergy] = useState<number>(5) // 기본값 5
+  const [isInitialized, setIsInitialized] = useState<boolean>(!!initialGrade) // 초기화 완료 여부
 
   // 학년에 따라 gradeLevel 자동 설정
   useEffect(() => {
@@ -103,22 +105,27 @@ export default function WritingPage() {
       
       if (gradeParam) {
         const gradeValue = parseInt(gradeParam, 10)
-        if (gradeValue >= 1 && gradeValue <= 6 && grade === null) {
-          // 초기 상태에서 설정되지 않았을 경우에만 설정
-          setGrade(gradeValue)
+        if (gradeValue >= 1 && gradeValue <= 6) {
+          if (grade === null) {
+            // 초기 상태에서 설정되지 않았을 경우에만 설정
+            setGrade(gradeValue)
+            setGradeLevel(gradeValue <= 3 ? 'elementary_low' : 'elementary_high')
+          }
+          setIsInitialized(true)
+          
+          // 프로필에서 에너지 정보만 가져오기
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('energy')
+            .eq('id', session.user.id)
+            .maybeSingle()
+          
+          const profileData = profile as { energy?: number } | null
+          if (profileData && profileData.energy !== undefined) {
+            setEnergy(profileData.energy)
+          }
+          return
         }
-        // 프로필에서 에너지 정보만 가져오기
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('energy')
-          .eq('id', session.user.id)
-          .maybeSingle()
-        
-        const profileData = profile as { energy?: number } | null
-        if (profileData && profileData.energy !== undefined) {
-          setEnergy(profileData.energy)
-        }
-        return
       }
       
       // URL 파라미터에 학년이 없으면 프로필에서 학년 가져오기
@@ -138,6 +145,8 @@ export default function WritingPage() {
       }
 
       setGrade(profileData.grade)
+      setGradeLevel(profileData.grade <= 3 ? 'elementary_low' : 'elementary_high')
+      setIsInitialized(true)
 
       // 에너지 정보 가져오기
       if (profileData.energy !== undefined) {
@@ -427,13 +436,13 @@ export default function WritingPage() {
 
   // 학년이 선택되지 않았으면 온보딩 페이지로 즉시 리다이렉트 (화면 렌더링 없이)
   useEffect(() => {
-    if (grade === null) {
+    if (!isInitialized && grade === null) {
       router.replace('/onboarding')
     }
-  }, [grade, router])
+  }, [grade, isInitialized, router])
 
-  // 학년이 선택되지 않았으면 아무것도 렌더링하지 않음 (리다이렉트 중)
-  if (grade === null) {
+  // 초기화가 완료되지 않았거나 학년이 없으면 아무것도 렌더링하지 않음 (리다이렉트 중)
+  if (!isInitialized || grade === null) {
     return null
   }
 
