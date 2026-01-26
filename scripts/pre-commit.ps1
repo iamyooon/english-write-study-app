@@ -22,11 +22,48 @@ if ($LASTEXITCODE -ne 0) {
 
 # 3. 단위 테스트 실행
 Write-Host "🧪 단위 테스트 실행 중..." -ForegroundColor Yellow
-npm run test
-if ($LASTEXITCODE -ne 0) {
+$unitTestOutput = npm run test 2>&1 | Tee-Object -Variable unitTestResult
+$unitTestExitCode = $LASTEXITCODE
+
+if ($unitTestExitCode -ne 0) {
     Write-Host "❌ 단위 테스트 실패" -ForegroundColor Red
     exit 1
 }
+
+# 단위 테스트 결과 요약 추출
+$unitTestSummary = ($unitTestResult | Select-Object -Last 20 | Out-String)
+
+# 4. E2E 테스트 실행
+Write-Host "🎭 E2E 테스트 실행 중..." -ForegroundColor Yellow
+$e2eTestOutput = npm run test:e2e 2>&1 | Tee-Object -Variable e2eTestResult
+$e2eTestExitCode = $LASTEXITCODE
+
+if ($e2eTestExitCode -ne 0) {
+    Write-Host "❌ E2E 테스트 실패" -ForegroundColor Red
+    exit 1
+}
+
+# E2E 테스트 결과 요약 추출
+$e2eTestSummary = ($e2eTestResult | Select-Object -Last 30 | Out-String)
+
+# 테스트 결과를 파일로 저장 (prepare-commit-msg에서 사용)
+$testResultsContent = @"
+## 테스트 결과
+
+### 단위 테스트 (Vitest)
+``````
+$unitTestSummary
+``````
+
+### E2E 테스트 (Playwright)
+``````
+$e2eTestSummary
+``````
+"@
+
+$testResultsFilePath = Join-Path $env:TEMP "pre-commit-test-results.txt"
+$testResultsContent | Out-File -FilePath $testResultsFilePath -Encoding UTF8
+Write-Host "📝 테스트 결과 저장: $testResultsFilePath" -ForegroundColor Cyan
 
 # 4. 문서 업데이트 (자동으로 최신 상태 반영)
 Write-Host "📚 문서 업데이트 중..." -ForegroundColor Yellow
