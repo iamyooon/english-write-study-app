@@ -20,11 +20,11 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  린트 경고 발생 (계속 진행)" -ForegroundColor Yellow
 }
 
-# 3. 테스트 실행
-Write-Host "🧪 테스트 실행 중..." -ForegroundColor Yellow
-npm test
+# 3. 단위 테스트 실행
+Write-Host "🧪 단위 테스트 실행 중..." -ForegroundColor Yellow
+npm run test
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ 테스트 실패" -ForegroundColor Red
+    Write-Host "❌ 단위 테스트 실패" -ForegroundColor Red
     exit 1
 }
 

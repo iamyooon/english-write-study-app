@@ -20,10 +20,10 @@ npm run lint || {
     echo "⚠️  린트 경고 발생 (계속 진행)"
 }
 
-# 3. 테스트 실행
-echo "🧪 테스트 실행 중..."
-npm test || {
-    echo "❌ 테스트 실패"
+# 3. 단위 테스트 실행
+echo "🧪 단위 테스트 실행 중..."
+npm run test || {
+    echo "❌ 단위 테스트 실패"
     exit 1
 }
 
