@@ -626,7 +626,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* 로고/홈 링크 */}
           <Link 
-            href={isLoggedIn ? '/writing' : '/'} 
+            href="/" 
             className="flex items-center gap-2"
           >
             <h1 className="text-xl font-bold text-indigo-600">

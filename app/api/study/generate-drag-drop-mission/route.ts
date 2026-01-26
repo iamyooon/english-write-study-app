@@ -7,7 +7,6 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
-import { openai } from '@/lib/openai/client'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -64,71 +63,74 @@ export async function POST(request: Request) {
       )
     }
 
-    const prompt = `다음 조건에 맞는 Drag & Drop 미션을 생성해주세요:
-- 대상: ${grade}학년 수준의 초등학생
-- 학습 방식: Drag & Drop (클릭 기반 단어 선택)
-- 주제: 일상생활, 가족, 학교, 취미 등 초등학생에게 친숙한 주제
-- 문장 길이: ${grade === 1 ? '3-4단어' : grade === 2 ? '4-5단어' : '5-6단어'}
-- 빈칸 개수: 1개 (매우 간단한 구조)
+    // 사용자가 이미 완료한 미션 ID 조회
+    const { data: completedMissions } = await supabase
+      .from('user_mission_progress')
+      .select('mission_id')
+      .eq('user_id', user.id)
 
-다음 JSON 형식으로 응답해주세요:
-{
-  "korean": "한글 미션 문장",
-  "template": "영어 문장 템플릿 (빈칸은 ___로 표시)",
-  "blanks": 1,
-  "wordOptions": ["선택지1", "선택지2", "선택지3", "선택지4"],
-  "correctAnswers": ["정답1"]
-}
+    const completedMissionIds = (completedMissions as { mission_id: string }[] | null)?.map((m) => m.mission_id) || []
 
-- korean: 한글 미션 문장 (${grade}학년 수준에 맞는 간단한 문장)
-- template: 영어 문장 템플릿, 빈칸은 ___로 표시 (예: "I like ___")
-- blanks: 빈칸 개수 (항상 1)
-- wordOptions: 선택 가능한 단어 목록 (4-6개, 정답 포함 + 오답 3-5개)
-- correctAnswers: 정답 배열 (빈칸이 1개이므로 1개 요소)
+    // DB에서 해당 학년의 drag_drop 타입 미션 조회
+    const { data: allMissions, error: missionsError } = await supabase
+      .from('missions')
+      .select('id, mission_data')
+      .eq('mission_type', 'drag_drop')
+      .eq('grade_level', gradeLevel)
+      .eq('grade', grade)
+      .eq('is_active', true)
 
-예시:
-- 1학년: {"korean": "나는 사과를 좋아해요", "template": "I like ___", "blanks": 1, "wordOptions": ["apple", "banana", "orange", "grape"], "correctAnswers": ["apple"]}
-- 2학년: {"korean": "나는 학교에 가요", "template": "I go to ___", "blanks": 1, "wordOptions": ["school", "home", "park", "store"], "correctAnswers": ["school"]}
-- 3학년: {"korean": "나는 매일 운동을 해요", "template": "I exercise every ___", "blanks": 1, "wordOptions": ["day", "morning", "week", "month"], "correctAnswers": ["day"]}`
-
-    // OpenAI API 호출
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a helpful assistant that generates drag-and-drop English learning missions for elementary school students.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 400,
-      response_format: { type: 'json_object' },
-    })
-
-    const responseText = completion.choices[0]?.message?.content
-    if (!responseText) {
-      throw new Error('미션 생성에 실패했습니다.')
+    if (missionsError) {
+      console.error('미션 조회 오류:', missionsError)
+      return NextResponse.json(
+        { error: '미션을 조회하는 중 오류가 발생했습니다.' },
+        { status: 500 }
+      )
     }
 
-    const parsedResponse = JSON.parse(responseText)
-    const korean = parsedResponse.korean
-    const template = parsedResponse.template
-    const blanks = parsedResponse.blanks || 1
-    const wordOptions = Array.isArray(parsedResponse.wordOptions) ? parsedResponse.wordOptions : []
-    const correctAnswers = Array.isArray(parsedResponse.correctAnswers) ? parsedResponse.correctAnswers : []
+    // 완료하지 않은 미션만 필터링
+    const missions = (allMissions as { id: string; mission_data: any }[] | null)?.filter(
+      (mission) => !completedMissionIds.includes(mission.id)
+    ) || []
+
+    if (!missions || missions.length === 0) {
+      return NextResponse.json(
+        { error: '해당 학년의 사용 가능한 미션이 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // 랜덤하게 하나 선택
+    const randomMission = missions[Math.floor(Math.random() * missions.length)]
+    const missionData = randomMission.mission_data as {
+      korean?: string
+      template?: string
+      blanks?: number
+      wordOptions?: string[]
+      correctAnswers?: string[]
+      sentence?: string
+      sub_type?: string
+    }
+
+    const korean = missionData.korean || missionData.sentence || ''
+    const template = missionData.template || ''
+    const blanks = missionData.blanks || 1
+    const wordOptions = Array.isArray(missionData.wordOptions) ? missionData.wordOptions : []
+    const correctAnswers = Array.isArray(missionData.correctAnswers) ? missionData.correctAnswers : []
 
     if (!korean || !template || wordOptions.length === 0 || correctAnswers.length === 0) {
-      throw new Error('생성된 미션 데이터가 올바르지 않습니다.')
+      return NextResponse.json(
+        { error: '미션 데이터가 올바르지 않습니다.' },
+        { status: 500 }
+      )
     }
 
     // 빈칸 개수와 정답 개수 일치 확인
     if (correctAnswers.length !== blanks) {
-      throw new Error('빈칸 개수와 정답 개수가 일치하지 않습니다.')
+      return NextResponse.json(
+        { error: '빈칸 개수와 정답 개수가 일치하지 않습니다.' },
+        { status: 500 }
+      )
     }
 
     // 에너지 소모
@@ -145,19 +147,17 @@ export async function POST(request: Request) {
       // 에너지 업데이트 실패해도 미션은 반환 (일관성 유지)
     }
 
-    // 미션 ID 생성
-    const missionId = `drag-drop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
     return NextResponse.json({
       success: true,
       mission: {
-        id: missionId,
+        id: randomMission.id,
         korean,
         template,
         blanks,
         wordOptions,
         correctAnswers,
         grade,
+        subType: missionData.sub_type,
       },
       energy: {
         current: newEnergy,
@@ -173,28 +173,6 @@ export async function POST(request: Request) {
     }
 
     console.error('Drag & Drop 미션 생성 오류:', error)
-    
-    // OpenAI API 키 오류 확인
-    if (error instanceof Error && error.message.includes('OPENAI_API_KEY')) {
-      return NextResponse.json(
-        { 
-          error: 'OpenAI API 키가 설정되지 않았습니다.',
-          details: '.env.local 파일에 OPENAI_API_KEY를 설정해주세요.'
-        },
-        { status: 500 }
-      )
-    }
-
-    // OpenAI API 오류 처리
-    if (error instanceof Error && (error.message.includes('401') || error.message.includes('Invalid'))) {
-      return NextResponse.json(
-        { 
-          error: 'OpenAI API 키가 유효하지 않습니다.',
-          details: '올바른 API 키를 확인해주세요.'
-        },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json(
       { 

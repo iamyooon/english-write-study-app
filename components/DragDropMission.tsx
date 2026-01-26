@@ -17,7 +17,8 @@ interface Mission {
   blanks: number // 빈칸 개수
   wordOptions: string[] // 선택 가능한 단어들
   correctAnswers: string[] // 정답 (순서대로)
-  level: number
+  level?: number // 호환성을 위해 선택적 속성으로 변경
+  grade?: number // 학년 정보
 }
 
 interface DragDropMissionProps {

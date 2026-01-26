@@ -7,7 +7,6 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
-import { openai } from '@/lib/openai/client'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -64,88 +63,60 @@ export async function POST(request: Request) {
       )
     }
 
-    // 학년에 맞는 프롬프트 생성
-    const gradeDescription = grade <= 3
-      ? `초등학교 ${grade}학년 수준의 문장`
-      : `초등학교 ${grade}학년 수준의 문장`
-    
-    // 학년별 문장 길이 및 난이도 결정
-    const wordCount = grade <= 3 
-      ? `${3 + grade * 2}-${5 + grade * 2}단어` // 1학년: 5-7단어, 2학년: 7-9단어, 3학년: 9-11단어
-      : `${7 + (grade - 3) * 2}-${11 + (grade - 3) * 2}단어` // 4학년: 11-13단어, 5학년: 13-15단어, 6학년: 15-17단어
-    
-    // 학년에 따른 문법 요소 결정
-    let grammarElements = '기본 단어, 현재형, 단수/복수'
-    if (grade >= 2) {
-      grammarElements += ', 형용사, 부사'
-    }
-    if (grade >= 3) {
-      grammarElements += ', 기본 전치사'
-    }
-    if (grade >= 4) {
-      grammarElements += ', 접속사(because, but, and)'
-    }
-    if (grade >= 5) {
-      grammarElements += ', 복합 문장'
-    }
-    if (grade >= 6) {
-      grammarElements += ', 시제 변화, 비교급'
+    // 사용자가 이미 완료한 미션 ID 조회
+    const { data: completedMissions } = await supabase
+      .from('user_mission_progress')
+      .select('mission_id')
+      .eq('user_id', user.id)
+
+    const completedMissionIds = (completedMissions as { mission_id: string }[] | null)?.map((m) => m.mission_id) || []
+
+    // DB에서 해당 학년의 keyboard 타입 미션 조회
+    const { data: allMissions, error: missionsError } = await supabase
+      .from('missions')
+      .select('id, mission_data')
+      .eq('mission_type', 'keyboard')
+      .eq('grade_level', gradeLevel)
+      .eq('grade', grade)
+      .eq('is_active', true)
+
+    if (missionsError) {
+      console.error('미션 조회 오류:', missionsError)
+      return NextResponse.json(
+        { error: '미션을 조회하는 중 오류가 발생했습니다.' },
+        { status: 500 }
+      )
     }
 
-    const prompt = `다음 조건에 맞는 한글 문장과 함께 어휘 목록과 예시 문장을 생성해주세요:
-- 대상: ${gradeDescription}
-- 주제: 일상생활, 가족, 학교, 취미 등 초등학생에게 친숙한 주제
-- 길이: ${wordCount}
-- 문법 요소: ${grammarElements}
+    // 완료하지 않은 미션만 필터링
+    const missions = (allMissions as { id: string; mission_data: any }[] | null)?.filter(
+      (mission) => !completedMissionIds.includes(mission.id)
+    ) || []
 
-다음 JSON 형식으로 응답해주세요:
-{
-  "korean": "생성된 한글 문장",
-  "vocabulary": ["주요 단어1", "주요 단어2", "주요 단어3"],
-  "example": "영어 예시 문장"
-}
-
-- vocabulary: 한글 문장을 영어로 번역할 때 필요한 주요 단어 3-5개 (영어 단어)
-- example: 한글 문장을 영어로 번역한 예시 문장 (${grade}학년 수준에 맞는 영어)
-
-예시:
-${grade <= 2 
-  ? '{"korean": "나는 사과를 좋아해요", "vocabulary": ["I", "like", "apple"], "example": "I like apples."}'
-  : grade <= 4
-  ? '{"korean": "나는 매일 아침 일찍 일어나서 운동을 해요", "vocabulary": ["I", "every", "morning", "early", "exercise"], "example": "I wake up early every morning and exercise."}'
-  : '{"korean": "나는 사과를 좋아하지만 오렌지를 더 선호해요 왜냐하면 더 달콤하기 때문이에요", "vocabulary": ["I", "like", "apple", "but", "prefer", "orange", "because", "sweeter"], "example": "I like apples, but I prefer oranges because they are sweeter."}'}`
-
-    // OpenAI API 호출
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a helpful assistant that generates Korean sentences for elementary school students learning English.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 300,
-      response_format: { type: 'json_object' },
-    })
-
-    const responseText = completion.choices[0]?.message?.content
-    if (!responseText) {
-      throw new Error('문장 생성에 실패했습니다.')
+    if (!missions || missions.length === 0) {
+      return NextResponse.json(
+        { error: '해당 학년의 사용 가능한 미션이 없습니다.' },
+        { status: 404 }
+      )
     }
 
-    const parsedResponse = JSON.parse(responseText)
-    const koreanSentence = parsedResponse.korean
-    const vocabulary = parsedResponse.vocabulary || []
-    const example = parsedResponse.example || ''
+    // 랜덤하게 하나 선택
+    const randomMission = missions[Math.floor(Math.random() * missions.length)]
+    const missionData = randomMission.mission_data as {
+      korean?: string
+      vocabulary?: string[]
+      example?: string
+    }
+
+    const koreanSentence = missionData.korean
+    const vocabulary = missionData.vocabulary || []
+    const example = missionData.example || ''
 
     if (!koreanSentence) {
-      throw new Error('생성된 문장을 찾을 수 없습니다.')
+      return NextResponse.json(
+        { error: '미션 데이터가 올바르지 않습니다.' },
+        { status: 500 }
+      )
     }
 
     // 에너지 소모
@@ -165,6 +136,7 @@ ${grade <= 2
     return NextResponse.json({
       success: true,
       mission: {
+        id: randomMission.id,
         korean: koreanSentence,
         vocabulary: Array.isArray(vocabulary) ? vocabulary : [],
         example: example,
@@ -185,28 +157,6 @@ ${grade <= 2
     }
 
     console.error('문장 생성 오류:', error)
-    
-    // OpenAI API 키 오류 확인
-    if (error instanceof Error && error.message.includes('OPENAI_API_KEY')) {
-      return NextResponse.json(
-        { 
-          error: 'OpenAI API 키가 설정되지 않았습니다.',
-          details: '.env.local 파일에 OPENAI_API_KEY를 설정해주세요.'
-        },
-        { status: 500 }
-      )
-    }
-
-    // OpenAI API 오류 처리
-    if (error instanceof Error && (error.message.includes('401') || error.message.includes('Invalid'))) {
-      return NextResponse.json(
-        { 
-          error: 'OpenAI API 키가 유효하지 않습니다.',
-          details: '올바른 API 키를 확인해주세요.'
-        },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json(
       { 

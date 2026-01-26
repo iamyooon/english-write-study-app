@@ -26,6 +26,7 @@ interface DragDropMissionData {
   wordOptions: string[]
   correctAnswers: string[]
   grade: number
+  level?: number // 호환성을 위해 선택적 속성으로 추가
 }
 
 interface Feedback {
