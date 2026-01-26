@@ -58,6 +58,38 @@ export async function updateSession(request: NextRequest) {
   const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
   const isAuthPath = authPaths.some((path) => pathname.startsWith(path))
   const isGuestPath = guestPaths.some((path) => pathname.startsWith(path))
+  const isHomePage = pathname === '/'
+
+  // 홈페이지 접근 시 로그인된 사용자 리다이렉트 처리 (서버 사이드)
+  if (isHomePage && user) {
+    try {
+      // 프로필에서 학년 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('grade')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const profileData = profile as { grade?: number } | null
+      const hasGrade =
+        !!profileData?.grade &&
+        profileData.grade >= 1 &&
+        profileData.grade <= 6
+
+      if (hasGrade) {
+        // 학년이 있으면 /writing?grade={grade}로 리다이렉트
+        const redirectUrl = new URL('/writing', request.url)
+        redirectUrl.searchParams.set('grade', profileData.grade.toString())
+        return NextResponse.redirect(redirectUrl)
+      } else {
+        // 학년이 없으면 /onboarding으로 리다이렉트
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+    } catch (error) {
+      // 프로필 조회 실패 시 기본 동작 (클라이언트에서 처리)
+      console.error('미들웨어 프로필 조회 오류:', error)
+    }
+  }
 
   // 로그인하지 않은 사용자가 보호된 경로 접근 시
   if (isProtectedPath && !user) {

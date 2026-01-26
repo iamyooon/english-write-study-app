@@ -15,7 +15,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 (미들웨어에서 리다이렉트 처리하지만, 클라이언트에서도 확인)
   useEffect(() => {
     let isMounted = true
     
@@ -23,20 +23,14 @@ export default function HomePage() {
       try {
         const supabase = createClient()
         
-        // 세션 확인 (타임아웃 제거 - 완료될 때까지 기다림)
+        // 세션 확인
         const { data: { session }, error } = await supabase.auth.getSession()
         
-        console.log('홈페이지 세션 확인:', { 
-          hasSession: !!session, 
-          userId: session?.user?.id,
-          error 
-        })
-
         if (!isMounted) return
 
         if (session && !error) {
-          console.log('로그인 상태 확인됨, 프로필 확인 후 리다이렉트')
-          const { data: profile, error: profileError } = await supabase
+          // 미들웨어에서 이미 리다이렉트 처리했지만, 혹시 모를 경우를 대비해 클라이언트에서도 처리
+          const { data: profile } = await supabase
             .from('profiles')
             .select('grade')
             .eq('id', session.user.id)
@@ -48,13 +42,7 @@ export default function HomePage() {
             profileData.grade >= 1 &&
             profileData.grade <= 6
 
-          if (profileError) {
-            console.warn('프로필 조회 오류:', profileError)
-          }
-
-          // 로딩 화면을 보여주지 않고 즉시 리다이렉트
           if (hasGrade) {
-            // 학년이 있으면 URL 파라미터로 학년을 전달하여 즉시 렌더링되도록 함
             router.replace(`/writing?grade=${profileData.grade}`)
           } else {
             router.replace('/onboarding')
@@ -63,7 +51,7 @@ export default function HomePage() {
         }
         
         setIsLoggedIn(false)
-        setIsLoading(false) // 로그인하지 않은 경우에도 로딩 상태 해제
+        setIsLoading(false)
       } catch (error) {
         console.error('세션 확인 오류:', error)
         if (isMounted) {
