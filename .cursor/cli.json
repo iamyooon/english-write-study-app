@@ -14,7 +14,12 @@
         "remote",
         "diff",
         "log",
-        "show"
+        "show",
+        "rev-parse",
+        "diff-tree",
+        "diff --cached",
+        "diff --name-only",
+        "diff --quiet"
       ],
       "allowedFlags": [
         "-m",
@@ -25,7 +30,16 @@
         "--stat",
         "-u",
         "origin",
-        "main"
+        "main",
+        "--cached",
+        "--name-only",
+        "--diff-filter",
+        "--no-commit-id",
+        "-r",
+        "--numstat",
+        "--pretty",
+        "-1",
+        "HEAD"
       ]
     },
     {
@@ -39,6 +53,23 @@
       ],
       "allowedFlags": [
         "--legacy-peer-deps"
+      ],
+      "allowedScripts": [
+        "type-check",
+        "lint",
+        "test",
+        "test:e2e",
+        "test:watch",
+        "test:coverage",
+        "test:all",
+        "precommit",
+        "pre-commit",
+        "update-docs",
+        "commit",
+        "post-commit",
+        "dev",
+        "build",
+        "start"
       ]
     },
     {
@@ -58,7 +89,11 @@
       "description": "Node.js 런타임",
       "allowedScripts": [
         "scripts/log-to-jira.mjs",
-        "scripts/add-jira-comment.mjs"
+        "scripts/add-jira-comment.mjs",
+        "scripts/post-commit-jira.js",
+        "scripts/update-docs.js",
+        "scripts/pre-commit.ps1",
+        "scripts/pre-commit.sh"
       ]
     },
     {
@@ -104,6 +139,32 @@
       "allowedFlags": [
         "/c"
       ]
+    },
+    {
+      "command": "cd",
+      "description": "디렉토리 변경",
+      "allowedPaths": [
+        ".",
+        "./scripts",
+        "./app",
+        "./lib",
+        "./.cursor",
+        "./.git",
+        "./components",
+        "./e2e",
+        "./types",
+        "./docs"
+      ]
+    },
+    {
+      "command": "chmod",
+      "description": "파일 권한 변경 (Linux/Mac)",
+      "allowedFlags": [
+        "+x"
+      ],
+      "allowedPaths": [
+        ".git/hooks/*"
+      ]
     }
   ],
   "allowedPaths": [
@@ -126,7 +187,8 @@
     ]
   },
   "metadata": {
-    "lastUpdated": "2026-01-17T17:56:00Z",
-    "description": "Cursor CLI 실행 권한 설정 - 지금까지 허용된 명령어 목록"
+    "lastUpdated": "2026-01-26T00:00:00Z",
+    "description": "Cursor CLI 실행 권한 설정 - 지금까지 허용된 명령어 목록",
+    "version": "2.0.0"
   }
 }
