@@ -30,8 +30,9 @@ if ($unitTestExitCode -ne 0) {
     exit 1
 }
 
-# 단위 테스트 결과 요약 추출
-$unitTestSummary = ($unitTestResult | Select-Object -Last 20 | Out-String)
+# 단위 테스트 결과 요약 추출 (더 상세한 정보 포함)
+$unitTestSummary = ($unitTestResult | Select-Object -Last 30 | Out-String)
+$unitTestStats = ($unitTestResult | Select-String -Pattern "(Test Files|Tests)" | Select-Object -Last 2 | Out-String)
 
 # 4. E2E 테스트 실행
 Write-Host "🎭 E2E 테스트 실행 중..." -ForegroundColor Yellow
@@ -43,20 +44,24 @@ if ($e2eTestExitCode -ne 0) {
     exit 1
 }
 
-# E2E 테스트 결과 요약 추출
-$e2eTestSummary = ($e2eTestResult | Select-Object -Last 30 | Out-String)
+# E2E 테스트 결과 요약 추출 (더 상세한 정보 포함)
+$e2eTestSummary = ($e2eTestResult | Select-Object -Last 50 | Out-String)
+$e2eTestStats = ($e2eTestResult | Select-String -Pattern "(passed|failed|skipped)" | Select-Object -Last 1 | Out-String)
 
 # 테스트 결과를 파일로 저장 (prepare-commit-msg에서 사용)
 $testResultsContent = @"
+
 ## 테스트 결과
 
 ### 단위 테스트 (Vitest)
 ``````
+$unitTestStats
 $unitTestSummary
 ``````
 
 ### E2E 테스트 (Playwright)
 ``````
+$e2eTestStats
 $e2eTestSummary
 ``````
 "@

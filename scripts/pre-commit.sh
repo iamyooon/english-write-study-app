@@ -31,8 +31,11 @@ if [ $UNIT_TEST_EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-# 테스트 결과 요약 추출
-UNIT_TEST_SUMMARY=$(tail -n 20 /tmp/test-results-unit.txt | grep -E "(Test Files|Tests|Time)" || echo "단위 테스트 완료")
+# 테스트 결과 요약 추출 (더 상세한 정보 포함)
+UNIT_TEST_SUMMARY=$(tail -n 30 /tmp/test-results-unit.txt | grep -E "(Test Files|Tests|Time|passed|failed|✓|×)" | head -n 10 || echo "단위 테스트 완료")
+
+# 단위 테스트 통계 추출
+UNIT_TEST_STATS=$(grep -E "(Test Files|Tests)" /tmp/test-results-unit.txt | tail -n 2 || echo "")
 
 # 4. E2E 테스트 실행
 echo "🎭 E2E 테스트 실행 중..."
@@ -45,23 +48,31 @@ if [ $E2E_TEST_EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-# E2E 테스트 결과 요약 추출
-E2E_TEST_SUMMARY=$(tail -n 30 /tmp/test-results-e2e.txt | grep -E "(passed|failed|skipped)" || echo "E2E 테스트 완료")
+# E2E 테스트 결과 요약 추출 (더 상세한 정보 포함)
+E2E_TEST_SUMMARY=$(tail -n 50 /tmp/test-results-e2e.txt | grep -E "(passed|failed|skipped|Tests|✓|×)" | head -n 15 || echo "E2E 테스트 완료")
+
+# E2E 테스트 통계 추출
+E2E_TEST_STATS=$(grep -E "(passed|failed|skipped)" /tmp/test-results-e2e.txt | tail -n 1 || echo "")
 
 # 테스트 결과를 파일로 저장 (prepare-commit-msg에서 사용)
 cat > /tmp/pre-commit-test-results.txt << EOF
+
 ## 테스트 결과
 
 ### 단위 테스트 (Vitest)
 \`\`\`
+$UNIT_TEST_STATS
 $UNIT_TEST_SUMMARY
 \`\`\`
 
 ### E2E 테스트 (Playwright)
 \`\`\`
+$E2E_TEST_STATS
 $E2E_TEST_SUMMARY
 \`\`\`
 EOF
+
+echo "📝 테스트 결과 저장 완료: /tmp/pre-commit-test-results.txt"
 
 # 4. 문서 업데이트 (자동으로 최신 상태 반영)
 echo "📚 문서 업데이트 중..."
