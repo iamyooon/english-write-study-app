@@ -2,177 +2,64 @@
   "allowedCommands": [
     {
       "command": "git",
-      "description": "Git 버전 관리 명령어",
-      "allowedSubcommands": [
-        "status",
-        "add",
-        "commit",
-        "push",
-        "pull",
-        "init",
-        "branch",
-        "remote",
-        "diff",
-        "log",
-        "show",
-        "rev-parse",
-        "diff-tree",
-        "diff --cached",
-        "diff --name-only",
-        "diff --quiet"
-      ],
-      "allowedFlags": [
-        "-m",
-        "-F",
-        "-A",
-        "--short",
-        "--name-status",
-        "--stat",
-        "-u",
-        "origin",
-        "main",
-        "--cached",
-        "--name-only",
-        "--diff-filter",
-        "--no-commit-id",
-        "-r",
-        "--numstat",
-        "--pretty",
-        "-1",
-        "HEAD"
-      ]
+      "description": "Git 버전 관리 명령어"
     },
     {
       "command": "npm",
-      "description": "Node.js 패키지 관리자",
-      "allowedSubcommands": [
-        "install",
-        "test",
-        "run",
-        "list"
-      ],
-      "allowedFlags": [
-        "--legacy-peer-deps"
-      ],
-      "allowedScripts": [
-        "type-check",
-        "lint",
-        "test",
-        "test:e2e",
-        "test:watch",
-        "test:coverage",
-        "test:all",
-        "precommit",
-        "pre-commit",
-        "update-docs",
-        "commit",
-        "post-commit",
-        "dev",
-        "build",
-        "start"
-      ]
+      "description": "Node.js 패키지 관리자"
     },
     {
       "command": "npx",
-      "description": "Node.js 패키지 실행 도구",
-      "allowedSubcommands": [
-        "vitest"
-      ],
-      "allowedFlags": [
-        "run",
-        "--reporter",
-        "verbose"
-      ]
+      "description": "Node.js 패키지 실행 도구"
     },
     {
       "command": "node",
-      "description": "Node.js 런타임",
-      "allowedScripts": [
-        "scripts/log-to-jira.mjs",
-        "scripts/add-jira-comment.mjs",
-        "scripts/post-commit-jira.js",
-        "scripts/update-docs.js",
-        "scripts/pre-commit.ps1",
-        "scripts/pre-commit.sh"
-      ]
+      "description": "Node.js 런타임"
+    },
+    {
+      "command": "tsx",
+      "description": "TypeScript 실행 도구"
     },
     {
       "command": "winget",
-      "description": "Windows 패키지 관리자",
-      "allowedSubcommands": [
-        "install"
-      ],
-      "allowedFlags": [
-        "--id",
-        "--silent",
-        "--accept-source-agreements",
-        "--accept-package-agreements"
-      ],
-      "allowedPackages": [
-        "Git.Git"
-      ]
+      "description": "Windows 패키지 관리자"
     },
     {
       "command": "powershell",
-      "description": "PowerShell 명령어",
-      "allowedCommands": [
-        "Get-Command",
-        "Test-Path",
-        "Get-ChildItem",
-        "Select-Object",
-        "Where-Object",
-        "ForEach-Object",
-        "New-Item",
-        "Get-Content",
-        "Out-File",
-        "Write-Output",
-        "[System.Environment]::GetEnvironmentVariable"
-      ]
+      "description": "PowerShell 명령어"
+    },
+    {
+      "command": "cmd.exe",
+      "description": "Windows 명령 프롬프트"
+    },
+    {
+      "command": "taskkill",
+      "description": "Windows 프로세스 종료"
+    },
+    {
+      "command": "start",
+      "description": "Windows 프로그램/URL 실행"
+    },
+    {
+      "command": "netstat",
+      "description": "네트워크 연결 상태 확인"
+    },
+    {
+      "command": "findstr",
+      "description": "Windows 문자열 검색"
     },
     {
       "command": "where.exe",
       "description": "Windows 명령어 경로 찾기"
     },
     {
-      "command": "cmd.exe",
-      "description": "Windows 명령 프롬프트",
-      "allowedFlags": [
-        "/c"
-      ]
-    },
-    {
       "command": "cd",
-      "description": "디렉토리 변경",
-      "allowedPaths": [
-        ".",
-        "./scripts",
-        "./app",
-        "./lib",
-        "./.cursor",
-        "./.git",
-        "./components",
-        "./e2e",
-        "./types",
-        "./docs"
-      ]
+      "description": "디렉토리 변경"
     },
     {
       "command": "chmod",
-      "description": "파일 권한 변경 (Linux/Mac)",
-      "allowedFlags": [
-        "+x"
-      ],
-      "allowedPaths": [
-        ".git/hooks/*"
-      ]
+      "description": "파일 권한 변경 (Linux/Mac)"
     }
-  ],
-  "allowedPaths": [
-    ".",
-    "./scripts",
-    "./app",
-    "./lib",
-    "./.cursor"
   ],
   "restrictions": {
     "blockedCommands": [
@@ -187,8 +74,8 @@
     ]
   },
   "metadata": {
-    "lastUpdated": "2026-01-26T00:00:00Z",
-    "description": "Cursor CLI 실행 권한 설정 - 지금까지 허용된 명령어 목록",
-    "version": "2.0.0"
+    "lastUpdated": "2026-01-29",
+    "description": "Cursor CLI 실행 권한 설정 - 허용된 명령어 목록 (세부 플래그/인자는 제한하지 않음)",
+    "version": "3.0.0"
   }
 }
