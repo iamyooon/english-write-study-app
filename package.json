@@ -19,6 +19,8 @@
     "pre-commit": "node scripts/pre-commit.ps1 || node scripts/pre-commit.sh",
     "update-docs": "node scripts/update-docs.js",
     "translate-korean": "tsx scripts/translate-korean-fields.ts",
+    "limit-missions": "tsx scripts/limit-missions-per-grade.ts",
+    "check-missions": "tsx scripts/check-missions-status.ts",
     "commit": "node scripts/commit-with-tests.ps1 || bash scripts/commit-with-tests.sh",
     "post-commit": "node scripts/post-commit-jira.js",
     "types:generate": "npx supabase gen types typescript --project-id ilgwjhtjdaghgwapwcki > types/database.ts",

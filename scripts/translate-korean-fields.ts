@@ -1,30 +1,33 @@
 /**
  * missions 테이블의 korean 필드가 영어인 경우 한글로 번역하여 업데이트하는 스크립트
+ * 학년별로 100개만 활성화하고 나머지는 비활성화하여 로컬에 백업
  * 
  * 사용법:
  *   npm run translate-korean
- * 
- * 주의사항:
- *   - OPENAI_API_KEY 환경 변수가 필요합니다
- *   - NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY 환경 변수가 필요합니다
- *   - 한 번에 모든 미션을 처리하므로 시간이 걸릴 수 있습니다
- *   - OpenAI API 호출 비용이 발생할 수 있습니다
  */
 
 import { config } from 'dotenv'
+import { resolve } from 'path'
 import { createClient } from '@supabase/supabase-js'
+import { writeFileSync } from 'fs'
 
-// .env 파일 로드
-config()
+// .env 파일들 로드 (.env.local 우선)
+config({ path: resolve(process.cwd(), '.env.local') })
+config({ path: resolve(process.cwd(), '.env') })
 
 // 환경 변수 확인
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const openaiApiKey = process.env.OPENAI_API_KEY
+
+console.log('[환경 변수 확인]')
+console.log(`  NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? '설정됨' : '없음'}`)
+console.log(`  SUPABASE_SERVICE_ROLE_KEY: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? '설정됨 (RLS 우회)' : '없음'}`)
+console.log(`  사용할 키: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE_KEY' : 'ANON_KEY'}`)
+console.log(`  OPENAI_API_KEY: ${openaiApiKey ? '설정됨' : '없음'}\n`)
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.')
-  console.error('   NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요.')
   process.exit(1)
 }
 
@@ -34,17 +37,14 @@ if (!openaiApiKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey)
-
-// 한글 포함 여부 확인 정규식
 const koreanRegex = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/
+const MAX_ACTIVE_PER_GRADE = 100
 
 /**
  * OpenAI API를 사용하여 영어 문장을 한글로 번역
  */
 async function translateToKorean(englishSentence: string): Promise<string | null> {
   try {
-    console.log(`  [번역] 시작: "${englishSentence}"`)
-    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -78,12 +78,9 @@ async function translateToKorean(englishSentence: string): Promise<string | null
     const translatedKorean = data.choices?.[0]?.message?.content?.trim()
     
     if (translatedKorean) {
-      console.log(`  [번역] 완료: "${translatedKorean}"`)
       return translatedKorean
-    } else {
-      console.warn(`  [번역] 응답에서 번역 결과를 찾을 수 없음`)
-      return null
     }
+    return null
   } catch (error) {
     console.error(`  [번역] 오류 발생:`, error)
     return null
@@ -91,117 +88,246 @@ async function translateToKorean(englishSentence: string): Promise<string | null
 }
 
 /**
- * 미션의 korean 필드를 업데이트
+ * 여러 미션을 배치로 업데이트
  */
-async function updateMissionKorean(missionId: string, newKorean: string, currentMissionData: any): Promise<boolean> {
-  try {
-    const updatedMissionData = {
-      ...currentMissionData,
-      korean: newKorean
-    }
+async function batchUpdateMissions(updates: Array<{ id: string; missionData: any }>): Promise<{ success: number; fail: number }> {
+  let successCount = 0
+  let failCount = 0
 
-    const { error } = await supabase
-      .from('missions')
-      .update({ mission_data: updatedMissionData })
-      .eq('id', missionId)
+  const batchSize = 50
+  for (let i = 0; i < updates.length; i += batchSize) {
+    const batch = updates.slice(i, i + batchSize)
+    const batchNum = Math.floor(i / batchSize) + 1
+    const totalBatches = Math.ceil(updates.length / batchSize)
+    
+    console.log(`  배치 ${batchNum}/${totalBatches} 처리 중... (${batch.length}개)`)
 
-    if (error) {
-      console.error(`  [업데이트] 실패:`, error)
-      return false
-    }
+    const updatePromises = batch.map(async (update) => {
+      try {
+        const { error } = await supabase
+          .from('missions')
+          .update({ mission_data: update.missionData })
+          .eq('id', update.id)
 
-    console.log(`  [업데이트] 성공`)
-    return true
-  } catch (error) {
-    console.error(`  [업데이트] 오류 발생:`, error)
-    return false
+        if (error) {
+          return false
+        }
+        return true
+      } catch (error) {
+        return false
+      }
+    })
+
+    const results = await Promise.all(updatePromises)
+    results.forEach((success) => {
+      if (success) {
+        successCount++
+      } else {
+        failCount++
+      }
+    })
+
+    const processed = Math.min(i + batchSize, updates.length)
+    console.log(`  ✅ 진행: ${processed}/${updates.length} (성공: ${successCount}, 실패: ${failCount})`)
   }
+
+  return { success: successCount, fail: failCount }
 }
 
 /**
- * 메인 함수
+ * 여러 미션의 is_active를 false로 설정
  */
-async function main() {
-  console.log('🚀 영어 문장을 한글로 번역하는 작업을 시작합니다...\n')
+async function deactivateMissions(missionIds: string[]): Promise<{ success: number; fail: number }> {
+  let successCount = 0
+  let failCount = 0
 
-  // 1. 영어 문장이 있는 미션들 조회
-  console.log('📊 영어 문장이 있는 미션 조회 중...')
-  const { data: missions, error: fetchError } = await supabase
+  const batchSize = 100
+  for (let i = 0; i < missionIds.length; i += batchSize) {
+    const batch = missionIds.slice(i, i + batchSize)
+    
+    const updatePromises = batch.map(async (id) => {
+      try {
+        const { error } = await supabase
+          .from('missions')
+          .update({ is_active: false })
+          .eq('id', id)
+
+        if (error) {
+          return false
+        }
+        return true
+      } catch (error) {
+        return false
+      }
+    })
+
+    const results = await Promise.all(updatePromises)
+    results.forEach((success) => {
+      if (success) {
+        successCount++
+      } else {
+        failCount++
+      }
+    })
+
+    const processed = Math.min(i + batchSize, missionIds.length)
+    console.log(`  ✅ 비활성화 진행: ${processed}/${missionIds.length} (성공: ${successCount}, 실패: ${failCount})`)
+  }
+
+  return { success: successCount, fail: failCount }
+}
+
+async function main() {
+  console.log('🚀 영어 문장을 한글로 번역하고 학년별로 100개만 활성화하는 작업을 시작합니다...\n')
+
+  // 1. 모든 미션 조회
+  console.log('📊 모든 미션 조회 중...')
+  const { data: allMissions, error: fetchError } = await supabase
     .from('missions')
-    .select('id, grade, grade_level, mission_data')
-    .eq('mission_type', 'keyboard')
-    .eq('is_active', true)
+    .select('id, grade, grade_level, mission_data, is_active, mission_type')
 
   if (fetchError) {
     console.error('❌ 미션 조회 실패:', fetchError)
     process.exit(1)
   }
 
-  if (!missions || missions.length === 0) {
+  if (!allMissions || allMissions.length === 0) {
     console.log('✅ 처리할 미션이 없습니다.')
     return
   }
 
-  // 2. 영어 문장이 있는 미션 필터링
-  const englishMissions = missions.filter((mission: any) => {
+  console.log(`📈 전체 미션: ${allMissions.length}개\n`)
+
+  // 2. 학년별로 모든 미션 그룹화
+  const allMissionsByGrade: Record<number, any[]> = {}
+  allMissions.forEach((mission: any) => {
+    if (!allMissionsByGrade[mission.grade]) {
+      allMissionsByGrade[mission.grade] = []
+    }
+    allMissionsByGrade[mission.grade].push(mission)
+  })
+
+  console.log('📊 학년별 전체 미션:')
+  Object.keys(allMissionsByGrade).sort().forEach((grade) => {
+    console.log(`  ${grade}학년: ${allMissionsByGrade[parseInt(grade)].length}개`)
+  })
+
+  // 3. 각 학년별로 100개만 선택 (나머지는 비활성화)
+  const missionsToKeep: any[] = []
+  const missionsToDeactivate: string[] = []
+  const backupData: any = {
+    timestamp: new Date().toISOString(),
+    byGrade: {} as Record<string, any[]>
+  }
+
+  Object.keys(allMissionsByGrade).sort().forEach((grade) => {
+    const gradeMissions = allMissionsByGrade[parseInt(grade)]
+    const selected = gradeMissions.slice(0, MAX_ACTIVE_PER_GRADE)
+    const toDeactivate = gradeMissions.slice(MAX_ACTIVE_PER_GRADE)
+
+    missionsToKeep.push(...selected)
+    missionsToDeactivate.push(...toDeactivate.map(m => m.id))
+    
+    backupData.byGrade[grade] = toDeactivate.map(m => ({
+      id: m.id,
+      grade: m.grade,
+      grade_level: m.grade_level,
+      mission_data: m.mission_data,
+      is_active: m.is_active,
+      mission_type: m.mission_type
+    }))
+
+    console.log(`\n  ${grade}학년:`)
+    console.log(`    활성화 유지: ${selected.length}개`)
+    console.log(`    비활성화 및 백업: ${toDeactivate.length}개`)
+  })
+
+  // 4. 영어 문장이 있는 미션 필터링 (번역 대상)
+  const missionsToTranslate = missionsToKeep.filter((mission: any) => {
     const korean = mission.mission_data?.korean
     return korean && !koreanRegex.test(korean)
   })
 
-  console.log(`📈 전체 미션: ${missions.length}개`)
-  console.log(`📈 영어 문장 미션: ${englishMissions.length}개\n`)
+  console.log(`\n📝 번역 대상: ${missionsToTranslate.length}개 (활성화 유지 중 영어 문장이 있는 미션)`)
 
-  if (englishMissions.length === 0) {
-    console.log('✅ 모든 미션의 korean 필드가 한글입니다.')
+  // 5. 백업 데이터 저장
+  if (missionsToDeactivate.length > 0) {
+    const backupFile = resolve(process.cwd(), 'missions-backup.json')
+    writeFileSync(backupFile, JSON.stringify(backupData, null, 2), 'utf-8')
+    console.log(`\n💾 백업 데이터 저장: ${backupFile}`)
+    console.log(`   백업된 미션: ${missionsToDeactivate.length}개`)
+  }
+
+  // 6. 나머지 미션들 비활성화
+  if (missionsToDeactivate.length > 0) {
+    console.log(`\n📤 ${missionsToDeactivate.length}개 미션을 비활성화 중...`)
+    const deactivateResults = await deactivateMissions(missionsToDeactivate)
+    console.log(`✅ 비활성화 완료: 성공 ${deactivateResults.success}개, 실패 ${deactivateResults.fail}개`)
+  }
+
+  // 7. 영어 문장이 있는 미션 번역
+  if (missionsToTranslate.length === 0) {
+    console.log('\n✅ 번역할 영어 문장이 없습니다. 모든 작업이 완료되었습니다.')
     return
   }
 
-  // 3. 각 미션을 번역하여 업데이트
-  let successCount = 0
-  let failCount = 0
+  console.log(`\n📝 ${missionsToTranslate.length}개 미션 번역 시작...\n`)
+  const translationResults: Array<{ id: string; missionData: any }> = []
+  let translationFailCount = 0
 
-  for (let i = 0; i < englishMissions.length; i++) {
-    const mission = englishMissions[i]
+  for (let i = 0; i < missionsToTranslate.length; i++) {
+    const mission = missionsToTranslate[i]
     const englishKorean = mission.mission_data?.korean
 
-    console.log(`\n[${i + 1}/${englishMissions.length}] 미션 ID: ${mission.id}`)
-    console.log(`  학년: ${mission.grade}, 레벨: ${mission.grade_level}`)
-    console.log(`  현재 korean: "${englishKorean}"`)
+    if ((i + 1) % 10 === 0 || i === 0) {
+      console.log(`[${i + 1}/${missionsToTranslate.length}] 미션 ID: ${mission.id}`)
+      console.log(`  학년: ${mission.grade}, korean: "${englishKorean}"`)
+    }
 
-    // 번역
     const translatedKorean = await translateToKorean(englishKorean)
 
     if (!translatedKorean) {
-      console.log(`  ⚠️  번역 실패, 건너뜀`)
-      failCount++
+      translationFailCount++
       continue
     }
 
-    // 업데이트
-    const updated = await updateMissionKorean(mission.id, translatedKorean, mission.mission_data)
-
-    if (updated) {
-      successCount++
-    } else {
-      failCount++
+    const updatedMissionData = {
+      ...mission.mission_data,
+      korean: translatedKorean
     }
+    translationResults.push({
+      id: mission.id,
+      missionData: updatedMissionData
+    })
 
-    // API 호출 제한을 고려한 딜레이 (초당 3개 요청 제한)
-    if (i < englishMissions.length - 1) {
+    if (i < missionsToTranslate.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 400))
     }
   }
 
-  // 4. 결과 출력
-  console.log('\n' + '='.repeat(50))
-  console.log('📊 작업 완료')
-  console.log(`✅ 성공: ${successCount}개`)
-  console.log(`❌ 실패: ${failCount}개`)
-  console.log(`📈 전체: ${englishMissions.length}개`)
-  console.log('='.repeat(50))
+  console.log(`\n📊 번역 완료: 성공 ${translationResults.length}개, 실패 ${translationFailCount}개`)
+
+  // 8. 번역된 미션들 업데이트
+  if (translationResults.length > 0) {
+    console.log(`\n📤 ${translationResults.length}개 미션을 배치로 업데이트 중...`)
+    const updateResults = await batchUpdateMissions(translationResults)
+    
+    console.log(`\n✅ 업데이트 완료: 성공 ${updateResults.success}개, 실패 ${updateResults.fail}개`)
+  }
+
+  // 9. 최종 결과 출력
+  console.log('\n' + '='.repeat(60))
+  console.log('📊 전체 작업 완료')
+  console.log('='.repeat(60))
+  console.log(`📝 번역 성공: ${translationResults.length}개`)
+  console.log(`📝 번역 실패: ${translationFailCount}개`)
+  console.log(`📤 업데이트 성공: ${translationResults.length}개`)
+  console.log(`✅ 활성화 유지: ${missionsToKeep.length}개 (학년별 최대 ${MAX_ACTIVE_PER_GRADE}개)`)
+  console.log(`📦 비활성화: ${missionsToDeactivate.length}개`)
+  console.log(`💾 백업 파일: missions-backup.json`)
+  console.log('='.repeat(60))
 }
 
-// 스크립트 실행
 main().catch((error) => {
   console.error('❌ 예상치 못한 오류 발생:', error)
   process.exit(1)
