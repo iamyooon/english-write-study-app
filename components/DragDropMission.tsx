@@ -148,31 +148,65 @@ export default function DragDropMission({ mission, onComplete }: DragDropMission
       if (session) {
         const userAnswer = userAnswers.join(' ')
         const fullSentence = mission.template.replace(/___/g, (_, idx) => userAnswers[idx] || '___')
+        // grade 값 확인 및 설정 (1-6 범위의 유효한 숫자만 허용)
+        let gradeValue: number
+        if (typeof mission.grade === 'number' && mission.grade >= 1 && mission.grade <= 6) {
+          gradeValue = mission.grade
+        } else if (typeof mission.level === 'number' && mission.level >= 1 && mission.level <= 6) {
+          gradeValue = mission.level
+        } else {
+          console.warn('[DragDrop] grade/level이 유효하지 않음, 기본값 1 사용:', {
+            grade: mission.grade,
+            level: mission.level,
+          })
+          gradeValue = 1
+        }
+        
         console.log('[DragDrop] 서버 전송 데이터:', { 
           missionId: mission.id, 
           userAnswer, 
           fullSentence, 
-          isCorrect: correct 
+          isCorrect: correct,
+          grade: gradeValue,
+          missionGrade: mission.grade,
+          missionLevel: mission.level,
+          missionObject: mission,
         })
+
+        const requestBody = {
+          missionId: mission.id,
+          userAnswer,
+          fullSentence,
+          isCorrect: correct,
+          grade: gradeValue,
+        }
+        console.log('[DragDrop] 요청 본문:', requestBody)
 
         const response = await fetch('/api/study/drag-drop-submit', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            missionId: mission.id,
-            userAnswer,
-            fullSentence,
-            isCorrect: correct,
-            level: mission.level,
-          }),
+          body: JSON.stringify(requestBody),
         })
         
         if (!response.ok) {
-          const error = await response.json()
-          console.error('[DragDrop] 서버 응답 오류:', error)
-          throw new Error(error.error || '제출 실패')
+          let error
+          try {
+            error = await response.json()
+          } catch (e) {
+            // JSON 파싱 실패 시 텍스트로 읽기 시도
+            const text = await response.text()
+            console.error('[DragDrop] 서버 응답 오류 (텍스트):', text)
+            error = { error: text || `HTTP ${response.status}: ${response.statusText}` }
+          }
+          console.error('[DragDrop] 서버 응답 오류:', {
+            status: response.status,
+            statusText: response.statusText,
+            error,
+            url: response.url,
+          })
+          throw new Error(error.error || error.message || `제출 실패 (${response.status})`)
         }
         
         const data = await response.json()

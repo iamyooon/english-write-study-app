@@ -16,9 +16,13 @@ const submitSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  let requestBody: any = null
   try {
-    const body = await request.json()
-    const validatedData = submitSchema.parse(body)
+    requestBody = await request.json()
+    console.log('[API DragDrop 제출] 요청 데이터:', requestBody)
+    
+    const validatedData = submitSchema.parse(requestBody)
+    console.log('[API DragDrop 제출] 검증된 데이터:', validatedData)
 
     const supabase = await createClient()
     const {
@@ -92,17 +96,27 @@ export async function POST(request: NextRequest) {
       score: validatedData.isCorrect ? 100 : 50, // 점수 추가
     })
   } catch (error) {
-    console.error('Drag & Drop 제출 오류:', error)
+    console.error('[API DragDrop 제출] 오류 발생:', error)
 
     if (error instanceof z.ZodError) {
+      console.error('[API DragDrop 제출] Zod 검증 실패:', {
+        issues: error.issues,
+        receivedData: requestBody,
+      })
       return NextResponse.json(
-        { error: '잘못된 요청 데이터입니다.', details: error.issues },
+        { 
+          error: '잘못된 요청 데이터입니다.', 
+          details: error.issues,
+          received: requestBody,
+        },
         { status: 400 }
       )
     }
 
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    console.error('[API DragDrop 제출] 서버 오류:', errorMessage)
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '서버 오류가 발생했습니다.', message: errorMessage },
       { status: 500 }
     )
   }
