@@ -5,6 +5,17 @@
 
 set -e  # 에러 발생 시 중단
 
+# Git hook이 없으면 자동으로 설치
+PRE_COMMIT_HOOK=".git/hooks/pre-commit"
+if [ ! -f "$PRE_COMMIT_HOOK" ]; then
+    echo "⚠️  Git hook이 없습니다. 자동으로 설치합니다..."
+    npm run install-hooks
+    if [ $? -ne 0 ]; then
+        echo "❌ Git hook 설치 실패"
+        exit 1
+    fi
+fi
+
 echo "🔍 커밋 전 검사 시작..."
 
 # 1. 타입 체크

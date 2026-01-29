@@ -3,6 +3,17 @@
 
 $ErrorActionPreference = "Stop"
 
+# Git hook이 없으면 자동으로 설치
+$preCommitHook = ".git\hooks\pre-commit"
+if (-not (Test-Path $preCommitHook)) {
+    Write-Host "⚠️  Git hook이 없습니다. 자동으로 설치합니다..." -ForegroundColor Yellow
+    npm run install-hooks
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Git hook 설치 실패" -ForegroundColor Red
+        exit 1
+    }
+}
+
 Write-Host "🔍 커밋 전 검사 시작..." -ForegroundColor Cyan
 
 # 1. 타입 체크

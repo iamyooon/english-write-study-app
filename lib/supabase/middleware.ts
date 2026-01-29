@@ -79,12 +79,18 @@ export async function updateSession(request: NextRequest) {
       // URL 파라미터에 학년이 있으면 통과 (grade 또는 recommended_grade)
       const gradeParam = request.nextUrl.searchParams.get('grade') || 
                          request.nextUrl.searchParams.get('recommended_grade')
+      
       if (gradeParam) {
         const gradeValue = parseInt(gradeParam, 10)
-        if (gradeValue >= 1 && gradeValue <= 6) {
+        if (!isNaN(gradeValue) && gradeValue >= 1 && gradeValue <= 6) {
           // 학년 파라미터가 유효하면 통과 (온보딩에서 "학습 시작하기"로 온 경우)
+          console.log('[미들웨어] /writing 접근 - 학년 파라미터 확인됨:', gradeParam, '통과')
           return supabaseResponse
+        } else {
+          console.log('[미들웨어] /writing 접근 - 학년 파라미터가 유효하지 않음:', gradeParam)
         }
+      } else {
+        console.log('[미들웨어] /writing 접근 - 학년 파라미터 없음, 프로필 확인 필요')
       }
 
       // URL 파라미터에 학년이 없으면 프로필에서 확인
@@ -114,7 +120,9 @@ export async function updateSession(request: NextRequest) {
 
       // 학년이 있으면 URL 파라미터에 추가하여 리다이렉트
       const redirectUrl = new URL('/writing', request.url)
-      redirectUrl.searchParams.set('grade', profileData.grade.toString())
+      if (profileData?.grade) {
+        redirectUrl.searchParams.set('grade', profileData.grade.toString())
+      }
       return NextResponse.redirect(redirectUrl)
     } catch (error) {
       console.error('미들웨어 /writing 처리 오류:', error)
