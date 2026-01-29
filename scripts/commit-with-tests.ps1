@@ -30,18 +30,42 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "📦 변경사항 스테이징 중..." -ForegroundColor Yellow
 git add .
 
-# 5. 커밋 메시지 입력 받기
+# 5. 커밋 메시지 파일 생성 및 입력 받기
 Write-Host ""
-$commitMessage = Read-Host "💬 커밋 메시지를 입력하세요"
+$commitMessageFile = "commit-message.txt"
 
-if ([string]::IsNullOrWhiteSpace($commitMessage)) {
+# 기존 커밋 메시지 파일이 있으면 읽어서 표시
+if (Test-Path $commitMessageFile) {
+    $existingMessage = Get-Content $commitMessageFile -Raw
+    Write-Host "📝 기존 커밋 메시지:" -ForegroundColor Cyan
+    Write-Host $existingMessage
+    Write-Host ""
+}
+
+Write-Host "💬 커밋 메시지를 입력하세요 (여러 줄 입력 가능, 빈 줄 입력 후 Enter로 완료):" -ForegroundColor Yellow
+$commitMessage = @()
+while ($true) {
+    $line = Read-Host
+    if ([string]::IsNullOrWhiteSpace($line) -and $commitMessage.Count -gt 0) {
+        break
+    }
+    if (-not [string]::IsNullOrWhiteSpace($line)) {
+        $commitMessage += $line
+    }
+}
+
+if ($commitMessage.Count -eq 0) {
     Write-Host "❌ 커밋 메시지가 비어있습니다." -ForegroundColor Red
     exit 1
 }
 
-# 6. 커밋
+# 커밋 메시지를 파일로 저장
+$commitMessage -join "`n" | Out-File -FilePath $commitMessageFile -Encoding UTF8 -NoNewline
+Write-Host "📝 커밋 메시지가 파일에 저장되었습니다: $commitMessageFile" -ForegroundColor Cyan
+
+# 6. 커밋 (파일 사용)
 Write-Host "💾 커밋 중..." -ForegroundColor Yellow
-git commit -m $commitMessage
+git commit -F $commitMessageFile
 
 # 7. 푸시 여부 확인
 Write-Host ""
